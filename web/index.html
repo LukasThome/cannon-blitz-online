@@ -83,6 +83,23 @@
       background: #2a1f1a;
       font-size: 10px;
     }
+    .spinner {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 2px solid #8b7a5a;
+      border-top-color: var(--accent-2);
+      border-radius: 50%;
+      margin-left: 6px;
+      animation: spin 0.9s linear infinite;
+      vertical-align: middle;
+    }
+    .spinner.hidden {
+      display: none;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
     .message {
       background: #1c1412;
       border: 2px dashed #5b4532;
@@ -151,7 +168,7 @@
   </style>
 </head>
 <body>
-    <div class="wrap">
+  <div class="wrap">
       <div class="stage">
       <div id="lobby-overlay">
         <div class="lobby-card">
@@ -181,8 +198,11 @@
     </div>
     <div class="side">
       <div class="title">Cannon Blitz</div>
-      <div class="pill" id="status">Connecting...</div>
+      <div class="pill" id="status"><span id="status-text">Connecting...</span> <span id="conn-indicator" class="spinner"></span></div>
       <div class="pill" id="backend-status">Backend: --</div>
+      <div class="row">
+        <button id="btn-reconnect" disabled>Reconectar</button>
+      </div>
       <div class="pill" id="room-code">Sala: --</div>
       <div class="pill" id="invite-link">Invite: --</div>
       <div class="row">

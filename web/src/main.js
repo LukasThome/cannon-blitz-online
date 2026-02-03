@@ -29,7 +29,10 @@ const palette = {
 
 const ui = {
   status: document.getElementById('status'),
+  statusText: document.getElementById('status-text'),
   backendStatus: document.getElementById('backend-status'),
+  connIndicator: document.getElementById('conn-indicator'),
+  btnReconnect: document.getElementById('btn-reconnect'),
   roomCode: document.getElementById('room-code'),
   inviteLink: document.getElementById('invite-link'),
   btnCopyLink: document.getElementById('btn-copy-link'),
@@ -130,11 +133,22 @@ let roomCode = null;
 let clientImpacts = [];
 let impactTimer = null;
 let lastShooterId = null;
+let backendOnline = false;
+
+function setConnectionState(state) {
+  ui.statusText.textContent = state;
+  if (state.toLowerCase().includes('connect')) {
+    ui.connIndicator.classList.remove('hidden');
+  } else {
+    ui.connIndicator.classList.add('hidden');
+  }
+}
 
 function connect() {
+  setConnectionState('Connecting...');
   socket = new WebSocket(WS_URL);
   socket.addEventListener('open', () => {
-    ui.status.textContent = 'Connected';
+    setConnectionState('Connected');
     const storedRoom = localStorage.getItem('cannon_room');
     const storedPlayer = localStorage.getItem('cannon_player');
     if (storedRoom && storedPlayer) {
@@ -148,7 +162,7 @@ function connect() {
       playerId = msg.player_id;
       roomCode = msg.room_code;
       ui.roomCode.textContent = `Sala: ${roomCode}`;
-      const invite = `${location.origin}${location.pathname}?room=${roomCode}`;
+      const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(WS_URL)}`;
       ui.inviteLink.textContent = `Invite: ${invite}`;
       ui.lobby.classList.add('hidden');
       ui.lobbyMessage.textContent = '';
@@ -186,7 +200,7 @@ function connect() {
   });
 
   socket.addEventListener('close', () => {
-    ui.status.textContent = 'Disconnected';
+    setConnectionState('Disconnected');
   });
 }
 
@@ -198,14 +212,18 @@ async function checkBackend() {
     if (res.ok) {
       const data = await res.json();
       ui.backendStatus.textContent = `Backend: ${data.status || 'ok'}`;
+      backendOnline = true;
     } else {
       ui.backendStatus.textContent = `Backend: error ${res.status}`;
+      backendOnline = false;
     }
   } catch (err) {
     ui.backendStatus.textContent = 'Backend: offline';
+    backendOnline = false;
   } finally {
     clearTimeout(timeout);
   }
+  ui.btnReconnect.disabled = !backendOnline;
 }
 
 function renderState() {
@@ -284,7 +302,7 @@ ui.btnReady.addEventListener('click', () => {
 
 ui.btnCopyLink.addEventListener('click', async () => {
   if (!roomCode) return;
-  const invite = `${location.origin}${location.pathname}?room=${roomCode}`;
+  const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(WS_URL)}`;
   try {
     await navigator.clipboard.writeText(invite);
     ui.message.textContent = 'Link copiado.';
@@ -308,6 +326,14 @@ myBoard.onCellClick(({ r, c }) => {
 connect();
 checkBackend();
 setInterval(checkBackend, 10000);
+
+ui.btnReconnect.addEventListener('click', () => {
+  if (!backendOnline) return;
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
+  }
+  connect();
+});
 
 const urlRoom = params.get('room');
 if (urlRoom) {
