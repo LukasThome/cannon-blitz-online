@@ -225,7 +225,7 @@
       font-family: inherit;
       font-size: 10px;
     }
-    #step-name, #step-mode, #step-join, #step-single, #step-confirm {
+    #setup-name, #setup-roomcode, #setup-difficulty, #setup-advanced {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -342,22 +342,32 @@
           <button id="setup-back-menu">Back</button>
         </div>
         <div class="pill" id="lobby-user">Jogador: --</div>
-        <div id="step-name">
+        <div id="setup-name">
           <label>
             Seu nome
             <input id="name-input" placeholder="Seu nome" />
           </label>
-          <div class="row">
-            <button id="btn-next-name">Continuar</button>
-          </div>
         </div>
 
-        <div id="step-mode" class="hidden">
-          <div class="row">
-            <button id="btn-create-mode">Criar Sala</button>
-            <button id="btn-join-mode">Entrar</button>
-            <button id="btn-single">Single Player</button>
-          </div>
+        <div id="setup-roomcode" class="hidden">
+          <label>
+            Código da sala
+            <input id="code-input" placeholder="ABCDE" />
+          </label>
+        </div>
+
+        <div id="setup-difficulty" class="hidden">
+          <label>
+            Dificuldade
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="setup-advanced" class="hidden">
           <div class="row">
             <button id="btn-advanced">Advanced</button>
           </div>
@@ -367,43 +377,11 @@
           </label>
         </div>
 
-        <div id="step-join" class="hidden">
-          <label>
-            Código da sala
-            <input id="code-input" placeholder="ABCDE" />
-          </label>
-          <div class="row">
-            <button id="btn-next-join">Continuar</button>
-            <button id="btn-back">Voltar</button>
-          </div>
-        </div>
-
-        <div id="step-single" class="hidden">
-          <label>
-            Dificuldade
-            <select id="difficulty">
-              <option value="easy">Easy</option>
-              <option value="normal" selected>Normal</option>
-              <option value="hard">Hard</option>
-            </select>
-          </label>
-          <div class="row">
-            <button id="btn-next-single">Continuar</button>
-            <button id="btn-back-single">Voltar</button>
-          </div>
-        </div>
-
-        <div id="step-confirm" class="hidden">
-          <div class="message" id="confirm-summary"></div>
-          <div class="row">
-            <button id="btn-create">Confirmar</button>
-            <button id="btn-join">Confirmar</button>
-            <button id="btn-start-single">Confirmar</button>
-            <button id="btn-back-confirm">Voltar</button>
-          </div>
-        </div>
-
         <div class="message" id="lobby-message"></div>
+        <div class="row">
+          <button id="setup-primary">Start</button>
+          <button id="setup-secondary">Back</button>
+        </div>
       </div>
     </div>
   </div>

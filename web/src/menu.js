@@ -13,6 +13,7 @@ export function initMenu(ui, actions) {
 
   ui.playQuick.addEventListener('click', () => {
     ui.menuMessage.textContent = 'Coming soon.';
+    actions.onPlayMode('quick');
   });
   ui.playCreate.addEventListener('click', () => actions.onPlayMode('create'));
   ui.playJoin.addEventListener('click', () => actions.onPlayMode('join'));

@@ -1,4 +1,4 @@
-import { initLobbySteps } from './lobby.js';
+import { initLobbySteps, MODES } from './lobby.js';
 import { initAuthUI } from './auth_ui.js';
 import { initFirebaseAuth } from './auth.js';
 import { wireAuthBadge } from './auth_badge.js';
@@ -69,17 +69,10 @@ const ui = {
   menuCredits: document.getElementById('menu-credits'),
   menuExit: document.getElementById('menu-exit'),
   nameInput: document.getElementById('name-input'),
-  btnNextName: document.getElementById('btn-next-name'),
   wsLabel: document.getElementById('ws-label'),
   wsInput: document.getElementById('ws-input'),
   difficulty: document.getElementById('difficulty'),
   codeInput: document.getElementById('code-input'),
-  btnCreate: document.getElementById('btn-create'),
-  btnCreateMode: document.getElementById('btn-create-mode'),
-  btnJoinMode: document.getElementById('btn-join-mode'),
-  btnSingle: document.getElementById('btn-single'),
-  btnStartSingle: document.getElementById('btn-start-single'),
-  btnJoin: document.getElementById('btn-join'),
   btnAdvanced: document.getElementById('btn-advanced'),
   setupBackMenu: document.getElementById('setup-back-menu'),
   modal: document.getElementById('modal'),
@@ -90,17 +83,12 @@ const ui = {
   settingsClose: document.getElementById('settings-close'),
   toggleSounds: document.getElementById('toggle-sounds'),
   togglePopups: document.getElementById('toggle-popups'),
-  stepName: document.getElementById('step-name'),
-  stepMode: document.getElementById('step-mode'),
-  stepJoin: document.getElementById('step-join'),
-  stepSingle: document.getElementById('step-single'),
-  stepConfirm: document.getElementById('step-confirm'),
-  confirmSummary: document.getElementById('confirm-summary'),
-  btnNextJoin: document.getElementById('btn-next-join'),
-  btnNextSingle: document.getElementById('btn-next-single'),
-  btnBack: document.getElementById('btn-back'),
-  btnBackSingle: document.getElementById('btn-back-single'),
-  btnBackConfirm: document.getElementById('btn-back-confirm'),
+  setupName: document.getElementById('setup-name'),
+  setupRoomcode: document.getElementById('setup-roomcode'),
+  setupDifficulty: document.getElementById('setup-difficulty'),
+  setupAdvanced: document.getElementById('setup-advanced'),
+  setupPrimary: document.getElementById('setup-primary'),
+  setupSecondary: document.getElementById('setup-secondary'),
   authMessage: document.getElementById('auth-message'),
   authStepMode: document.getElementById('auth-step-mode'),
   authStepEmail: document.getElementById('auth-step-email'),
@@ -314,13 +302,49 @@ const router = createRouter({
   isDev,
 });
 
-const lobbySteps = initLobbySteps(ui);
-const { showStep } = lobbySteps;
+const lobbySteps = initLobbySteps(ui, {
+  onCreate({ name }) {
+    const wsUrl = ui.wsInput.value.trim();
+    if (wsUrl) {
+      localStorage.setItem('cannon_ws', wsUrl);
+      if (!wsParam) {
+        setWsUrl(wsUrl);
+      }
+    }
+    send('create_room', { name });
+  },
+  onStartSingle({ name, difficulty }) {
+    send('create_ai_room', { name, difficulty });
+  },
+  onJoin({ name, code }) {
+    const wsUrl = ui.wsInput.value.trim();
+    if (wsUrl) {
+      localStorage.setItem('cannon_ws', wsUrl);
+      if (!wsParam) {
+        setWsUrl(wsUrl);
+      }
+    }
+    send('join_room', { name, room_code: code });
+  },
+  onQuick({ name }) {
+    ui.lobbyMessage.textContent = 'Quick match em breve.';
+    send('create_room', { name });
+  },
+  onBack() {
+    router.navigate('/menu');
+  },
+});
+lobbySteps.setMode(MODES.CREATE);
 
 initMenu(ui, {
   onPlayMode(mode) {
-    lobbySteps.setForcedMode(mode);
-    showStep(ui.stepName);
+    const map = {
+      create: MODES.CREATE,
+      join: MODES.JOIN,
+      single: MODES.AI,
+      quick: MODES.QUICK,
+    };
+    lobbySteps.setMode(map[mode] || MODES.CREATE);
     router.navigate('/menu/play');
   },
 });
@@ -601,53 +625,6 @@ function send(type, payload) {
   socket.send(JSON.stringify(message));
 }
 
-ui.btnCreate.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim();
-  if (!name) {
-    ui.lobbyMessage.textContent = 'Digite seu nome.';
-    return;
-  }
-  const wsUrl = ui.wsInput.value.trim();
-  if (wsUrl) {
-    localStorage.setItem('cannon_ws', wsUrl);
-    if (!wsParam) {
-      setWsUrl(wsUrl);
-    }
-  }
-  send('create_room', { name });
-});
-
-ui.btnStartSingle.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim();
-  if (!name) {
-    ui.lobbyMessage.textContent = 'Digite seu nome.';
-    return;
-  }
-  const difficulty = ui.difficulty.value;
-  send('create_ai_room', { name, difficulty });
-});
-
-ui.btnJoin.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim();
-  if (!name) {
-    ui.lobbyMessage.textContent = 'Digite seu nome.';
-    return;
-  }
-  const code = ui.codeInput.value.trim().toUpperCase();
-  if (!code) {
-    ui.lobbyMessage.textContent = 'Informe o codigo da sala.';
-    return;
-  }
-  const wsUrl = ui.wsInput.value.trim();
-  if (wsUrl) {
-    localStorage.setItem('cannon_ws', wsUrl);
-    if (!wsParam) {
-      setWsUrl(wsUrl);
-    }
-  }
-  send('join_room', { name, room_code: code });
-});
-
 ui.btnAdvanced.addEventListener('click', () => {
   const isHidden = ui.wsLabel.classList.contains('hidden');
   ui.wsLabel.classList.toggle('hidden', !isHidden);
@@ -755,8 +732,7 @@ ui.diagReconnect.addEventListener('click', () => {
 const urlRoom = params.get('room');
 if (urlRoom) {
   ui.codeInput.value = urlRoom.toUpperCase();
-  ui.btnNextName.classList.add('hidden');
-  lobbySteps.setForcedMode('join');
+  lobbySteps.setMode(MODES.JOIN);
   router.navigate('/menu/play', { replace: true });
   const codeLabel = ui.codeInput.closest('label');
   if (codeLabel) {
@@ -777,9 +753,6 @@ if (urlRoom) {
       pendingJoin = true;
     }
   });
-  showStep(ui.stepName);
-} else {
-  showStep(ui.stepName);
 }
 if (wsParam) {
   ui.wsInput.value = wsParam;

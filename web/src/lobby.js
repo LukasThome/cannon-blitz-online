@@ -1,121 +1,120 @@
-export function initLobbySteps(ui) {
-  let mode = null;
-  let forcedMode = null;
+const MODES = {
+  AI: 'ai',
+  QUICK: 'quick',
+  CREATE: 'create',
+  JOIN: 'join',
+};
 
-  const showStep = (step) => {
-    ui.stepName.classList.add('hidden');
-    ui.stepMode.classList.add('hidden');
-    ui.stepJoin.classList.add('hidden');
-    ui.stepSingle.classList.add('hidden');
-    ui.stepConfirm.classList.add('hidden');
-    step.classList.remove('hidden');
-  };
+function hide(el) {
+  if (!el) return;
+  el.classList.add('hidden');
+}
+
+function show(el) {
+  if (!el) return;
+  el.classList.remove('hidden');
+}
+
+export function initLobbySteps(ui, actions = {}) {
+  let mode = null;
+  let wsAdvancedVisible = false;
 
   const setMessage = (text) => {
     ui.lobbyMessage.textContent = text || '';
   };
 
-  const updateConfirm = () => {
-    const name = ui.nameInput.value.trim();
-    const code = ui.codeInput.value.trim().toUpperCase();
-    const difficulty = ui.difficulty.value;
-    if (mode === 'create') {
-      ui.confirmSummary.textContent = `Criar sala para ${name}.`;
-      ui.btnCreate.classList.remove('hidden');
-      ui.btnJoin.classList.add('hidden');
-      ui.btnStartSingle.classList.add('hidden');
-    } else if (mode === 'join') {
-      ui.confirmSummary.textContent = `Entrar na sala ${code} como ${name}.`;
-      ui.btnCreate.classList.add('hidden');
-      ui.btnJoin.classList.remove('hidden');
-      ui.btnStartSingle.classList.add('hidden');
-    } else if (mode === 'single') {
-      ui.confirmSummary.textContent = `Single Player (${difficulty}) para ${name}.`;
-      ui.btnCreate.classList.add('hidden');
-      ui.btnJoin.classList.add('hidden');
-      ui.btnStartSingle.classList.remove('hidden');
+  const render = () => {
+    show(ui.setupName);
+    hide(ui.setupRoomcode);
+    hide(ui.setupDifficulty);
+    hide(ui.setupAdvanced);
+    hide(ui.wsLabel);
+
+    if (mode === MODES.AI) {
+      show(ui.setupDifficulty);
+      ui.setupPrimary.textContent = 'Start';
+      ui.setupSecondary.textContent = 'Back';
+      wsAdvancedVisible = false;
+      return;
+    }
+
+    if (mode === MODES.JOIN) {
+      show(ui.setupRoomcode);
+      show(ui.setupAdvanced);
+      ui.setupPrimary.textContent = 'Join';
+      ui.setupSecondary.textContent = 'Back';
+      ui.wsLabel.classList.toggle('hidden', !wsAdvancedVisible);
+      return;
+    }
+
+    if (mode === MODES.CREATE) {
+      show(ui.setupAdvanced);
+      ui.setupPrimary.textContent = 'Create';
+      ui.setupSecondary.textContent = 'Back';
+      ui.wsLabel.classList.toggle('hidden', !wsAdvancedVisible);
+      return;
+    }
+
+    if (mode === MODES.QUICK) {
+      show(ui.setupAdvanced);
+      ui.setupPrimary.textContent = 'Match';
+      ui.setupSecondary.textContent = 'Back';
+      ui.wsLabel.classList.toggle('hidden', !wsAdvancedVisible);
+      return;
     }
   };
 
-  ui.btnNextName.addEventListener('click', () => {
+  ui.setupPrimary.addEventListener('click', () => {
     const name = ui.nameInput.value.trim();
     if (!name) {
-      setMessage('Digite seu nome para continuar.');
+      setMessage('Digite seu nome.');
       return;
     }
-    setMessage('');
-    if (forcedMode === 'create') {
-      mode = 'create';
-      updateConfirm();
-      showStep(ui.stepConfirm);
+    if (mode === MODES.AI) {
+      actions.onStartSingle?.({ name, difficulty: ui.difficulty.value });
       return;
     }
-    if (forcedMode === 'join') {
-      mode = 'join';
-      showStep(ui.stepJoin);
+    if (mode === MODES.JOIN) {
+      const code = ui.codeInput.value.trim().toUpperCase();
+      if (!code) {
+        setMessage('Informe o codigo da sala.');
+        return;
+      }
+      actions.onJoin?.({ name, code });
       return;
     }
-    if (forcedMode === 'single') {
-      mode = 'single';
-      showStep(ui.stepSingle);
+    if (mode === MODES.CREATE) {
+      actions.onCreate?.({ name });
       return;
     }
-    showStep(ui.stepMode);
-  });
-
-  ui.btnCreateMode.addEventListener('click', () => {
-    mode = 'create';
-    updateConfirm();
-    showStep(ui.stepConfirm);
-  });
-
-  ui.btnJoinMode.addEventListener('click', () => {
-    mode = 'join';
-    showStep(ui.stepJoin);
-  });
-
-  ui.btnSingle.addEventListener('click', () => {
-    mode = 'single';
-    showStep(ui.stepSingle);
-  });
-
-  ui.btnNextJoin.addEventListener('click', () => {
-    const code = ui.codeInput.value.trim();
-    if (!code) {
-      setMessage('Informe o codigo da sala.');
-      return;
+    if (mode === MODES.QUICK) {
+      actions.onQuick?.({ name });
     }
-    setMessage('');
-    updateConfirm();
-    showStep(ui.stepConfirm);
   });
 
-  ui.btnNextSingle.addEventListener('click', () => {
-    updateConfirm();
-    showStep(ui.stepConfirm);
+  ui.setupSecondary.addEventListener('click', () => {
+    actions.onBack?.();
   });
 
-  ui.btnBack.addEventListener('click', () => {
-    showStep(ui.stepMode);
+  ui.btnAdvanced.addEventListener('click', () => {
+    if (mode === MODES.AI) return;
+    wsAdvancedVisible = !wsAdvancedVisible;
+    ui.btnAdvanced.textContent = wsAdvancedVisible ? 'Advanced ✓' : 'Advanced';
+    ui.wsLabel.classList.toggle('hidden', !wsAdvancedVisible);
   });
 
-  ui.btnBackSingle.addEventListener('click', () => {
-    showStep(ui.stepMode);
-  });
-
-  ui.btnBackConfirm.addEventListener('click', () => {
-    if (mode === 'create') return showStep(ui.stepMode);
-    if (mode === 'join') return showStep(ui.stepJoin);
-    if (mode === 'single') return showStep(ui.stepSingle);
-    return showStep(ui.stepMode);
-  });
-
-  showStep(ui.stepName);
+  render();
 
   return {
-    showStep,
-    setForcedMode(nextMode) {
-      forcedMode = nextMode;
+    setMode(nextMode) {
+      mode = nextMode;
+      wsAdvancedVisible = false;
+      ui.btnAdvanced.textContent = 'Advanced';
+      setMessage('');
+      render();
     },
+    setMessage,
   };
 }
+
+export { MODES };
