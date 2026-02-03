@@ -3,10 +3,17 @@ export function wireAuthBadge(ui, auth) {
 
   auth.onAuthStateChanged((user) => {
     if (user) {
-      ui.authUser.textContent = `User: ${user.email || user.uid}`;
+      const label = user.email || user.uid;
+      ui.authUser.textContent = `User: ${label}`;
+      if (ui.lobbyUser) {
+        ui.lobbyUser.textContent = `Jogador: ${label}`;
+      }
       ui.btnLogout.disabled = false;
     } else {
       ui.authUser.textContent = 'User: --';
+      if (ui.lobbyUser) {
+        ui.lobbyUser.textContent = 'Jogador: --';
+      }
       ui.btnLogout.disabled = true;
     }
   });

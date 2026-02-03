@@ -38,6 +38,7 @@ const ui = {
   backendStatus: document.getElementById('backend-status'),
   authUser: document.getElementById('auth-user'),
   btnLogout: document.getElementById('btn-logout'),
+  lobbyUser: document.getElementById('lobby-user'),
   connIndicator: document.getElementById('conn-indicator'),
   btnReconnect: document.getElementById('btn-reconnect'),
   btnSound: document.getElementById('btn-sound'),
@@ -295,7 +296,7 @@ async function setupAuth() {
     const config = window.__FIREBASE_CONFIG__ || {};
     const auth = await initFirebaseAuth(config);
     initAuthUI(authUi, auth);
-    wireAuthBadge({ authUser: ui.authUser, btnLogout: ui.btnLogout }, auth);
+    wireAuthBadge({ authUser: ui.authUser, btnLogout: ui.btnLogout, lobbyUser: ui.lobbyUser }, auth);
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         idToken = await user.getIdToken();
