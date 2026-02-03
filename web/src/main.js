@@ -136,6 +136,7 @@ let clientImpacts = [];
 let impactTimer = null;
 let lastShooterId = null;
 let backendOnline = false;
+let pendingJoin = false;
 
 function setConnectionState(state) {
   ui.statusText.textContent = state;
@@ -155,6 +156,12 @@ function connect() {
     const storedPlayer = localStorage.getItem('cannon_player');
     if (storedRoom && storedPlayer) {
       send('reconnect', { room_code: storedRoom, player_id: storedPlayer });
+      return;
+    }
+    if (pendingJoin) {
+      const name = ui.nameInput.value.trim() || 'Jogador';
+      send('join_room', { name, room_code: ui.codeInput.value.trim().toUpperCase() });
+      pendingJoin = false;
     }
   });
 
@@ -166,6 +173,7 @@ function connect() {
       ui.roomCode.textContent = `Sala: ${roomCode}`;
       const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(WS_URL)}`;
       ui.inviteLink.textContent = `Invite: ${invite}`;
+      ui.lobbyMessage.textContent = `Link: ${invite}`;
       ui.lobby.classList.add('hidden');
       ui.lobbyMessage.textContent = '';
       readyState = false;
@@ -346,6 +354,22 @@ ui.btnReconnect.addEventListener('click', () => {
 const urlRoom = params.get('room');
 if (urlRoom) {
   ui.codeInput.value = urlRoom.toUpperCase();
+  ui.btnCreate.classList.add('hidden');
+  ui.btnJoin.classList.add('hidden');
+  const codeLabel = ui.codeInput.closest('label');
+  if (codeLabel) {
+    codeLabel.classList.add('hidden');
+  }
+  ui.lobbyMessage.textContent = 'Digite seu nome para entrar.';
+  ui.nameInput.addEventListener('change', () => {
+    const name = ui.nameInput.value.trim();
+    if (!name) return;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      send('join_room', { name, room_code: ui.codeInput.value.trim().toUpperCase() });
+    } else {
+      pendingJoin = true;
+    }
+  });
 }
 if (wsParam) {
   ui.wsInput.value = wsParam;
