@@ -5,7 +5,7 @@ import json
 import random
 from typing import Dict
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .rooms import RoomManager, Room
@@ -83,6 +83,15 @@ def _apply_ai(room: Room) -> None:
 @app.get("/health")
 async def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/auth/verify")
+async def auth_verify(authorization: str = Header(None)) -> Dict[str, str]:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing token")
+    token = authorization.replace("Bearer ", "").strip()
+    decoded = verify_id_token(token)
+    return {"uid": decoded.get("uid", "")}
 
 
 async def broadcast_room(room: Room) -> None:

@@ -78,6 +78,9 @@ Set these environment variables in Vercel (Project Settings → Environment Vari
 Vercel will run `npm run generate:config` (see `web/vercel.json`) to create `web/config.json` during build.
 Make sure the Firebase env vars are set in Vercel; the build will fail if any are missing.
 
+If Vercel still returns `GET /config.json 404`, set the **Root Directory** to the repo root
+and let `vercel.json` (root) run `cd web && npm run generate:config`, or trigger a redeploy.
+
 ## Structure
 - `docs/` Original UML and requirements
 - `server/` FastAPI + WebSockets multiplayer backend
