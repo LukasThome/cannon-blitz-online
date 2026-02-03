@@ -55,6 +55,18 @@ npm run generate:config
 ```
 This writes `web/config.json` (gitignored). The app loads it at runtime.
 
+### Vercel Env Setup
+Set these environment variables in Vercel (Project Settings → Environment Variables), then redeploy:
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_APP_ID`
+- `FIREBASE_MEASUREMENT_ID`
+
+Vercel will run `npm run generate:config` (see `web/vercel.json`) to create `web/config.json` during build.
+
 ## Structure
 - `docs/` Original UML and requirements
 - `server/` FastAPI + WebSockets multiplayer backend
