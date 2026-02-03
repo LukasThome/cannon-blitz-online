@@ -3,6 +3,10 @@ const params = new URLSearchParams(location.search);
 const wsParam = params.get('ws');
 const storedWs = localStorage.getItem('cannon_ws');
 const WS_URL = wsParam || storedWs || defaultWsUrl;
+const healthUrl = WS_URL
+  .replace(/^wss:\/\//, 'https://')
+  .replace(/^ws:\/\//, 'http://')
+  .replace(/\/ws$/, '/health');
 
 const app = new PIXI.Application({
   width: 640,
@@ -25,6 +29,7 @@ const palette = {
 
 const ui = {
   status: document.getElementById('status'),
+  backendStatus: document.getElementById('backend-status'),
   roomCode: document.getElementById('room-code'),
   inviteLink: document.getElementById('invite-link'),
   btnCopyLink: document.getElementById('btn-copy-link'),
@@ -185,6 +190,24 @@ function connect() {
   });
 }
 
+async function checkBackend() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3000);
+  try {
+    const res = await fetch(healthUrl, { signal: controller.signal });
+    if (res.ok) {
+      const data = await res.json();
+      ui.backendStatus.textContent = `Backend: ${data.status || 'ok'}`;
+    } else {
+      ui.backendStatus.textContent = `Backend: error ${res.status}`;
+    }
+  } catch (err) {
+    ui.backendStatus.textContent = 'Backend: offline';
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function renderState() {
   if (!state) return;
 
@@ -283,6 +306,8 @@ myBoard.onCellClick(({ r, c }) => {
 });
 
 connect();
+checkBackend();
+setInterval(checkBackend, 10000);
 
 const urlRoom = params.get('room');
 if (urlRoom) {
