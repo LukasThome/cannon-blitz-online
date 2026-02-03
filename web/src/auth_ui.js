@@ -68,15 +68,5 @@ export function initAuthUI(ui, auth) {
     });
   }
 
-  if (auth.onAuthStateChanged) {
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        ui.overlay.classList.add('hidden');
-      } else {
-        ui.overlay.classList.remove('hidden');
-      }
-    });
-  }
-
   return { showStep };
 }

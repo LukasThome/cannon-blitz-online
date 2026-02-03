@@ -4,6 +4,7 @@ import { initFirebaseAuth } from './auth.js';
 import { wireAuthBadge } from './auth_badge.js';
 import { checkAuthStatus } from './auth_status.js';
 import { initMenu } from './menu.js';
+import { createRouter } from './router.js';
 
 const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
@@ -35,16 +36,9 @@ const palette = {
 };
 
 const ui = {
-  status: document.getElementById('status'),
-  statusText: document.getElementById('status-text'),
-  backendStatus: document.getElementById('backend-status'),
   authUser: document.getElementById('auth-user'),
-  authStatus: document.getElementById('auth-status'),
-  btnLogout: document.getElementById('btn-logout'),
   lobbyUser: document.getElementById('lobby-user'),
   userAvatar: document.getElementById('user-avatar'),
-  connIndicator: document.getElementById('conn-indicator'),
-  btnReconnect: document.getElementById('btn-reconnect'),
   btnSound: document.getElementById('btn-sound'),
   btnSettings: document.getElementById('btn-settings'),
   roomCode: document.getElementById('room-code'),
@@ -59,7 +53,6 @@ const ui = {
   btnStrong: document.getElementById('btn-strong'),
   btnBuy: document.getElementById('btn-buy'),
   btnReady: document.getElementById('btn-ready'),
-  lobby: document.getElementById('lobby-overlay'),
   lobbyMessage: document.getElementById('lobby-message'),
   mainMenu: document.getElementById('main-menu'),
   menuPlay: document.getElementById('menu-play'),
@@ -88,6 +81,7 @@ const ui = {
   btnStartSingle: document.getElementById('btn-start-single'),
   btnJoin: document.getElementById('btn-join'),
   btnAdvanced: document.getElementById('btn-advanced'),
+  setupBackMenu: document.getElementById('setup-back-menu'),
   modal: document.getElementById('modal'),
   modalTitle: document.getElementById('modal-title'),
   modalBody: document.getElementById('modal-body'),
@@ -107,7 +101,6 @@ const ui = {
   btnBack: document.getElementById('btn-back'),
   btnBackSingle: document.getElementById('btn-back-single'),
   btnBackConfirm: document.getElementById('btn-back-confirm'),
-  authOverlay: document.getElementById('auth-overlay'),
   authMessage: document.getElementById('auth-message'),
   authStepMode: document.getElementById('auth-step-mode'),
   authStepEmail: document.getElementById('auth-step-email'),
@@ -118,7 +111,21 @@ const ui = {
   authSubmit: document.getElementById('auth-submit'),
   authLogin: document.getElementById('auth-login'),
   authRegister: document.getElementById('auth-register'),
+  btnLogout: document.getElementById('menu-exit'),
+  screenLogin: document.getElementById('screen-login'),
+  screenMenu: document.getElementById('screen-menu'),
+  screenSetup: document.getElementById('screen-setup'),
+  screenGame: document.getElementById('screen-game'),
+  diagnostics: document.getElementById('diagnostics'),
+  diagStatusText: document.getElementById('diag-status-text'),
+  diagBackend: document.getElementById('diag-backend'),
+  diagAuth: document.getElementById('diag-auth'),
+  diagConnIndicator: document.getElementById('diag-conn-indicator'),
+  diagWs: document.getElementById('diag-ws'),
+  diagReconnect: document.getElementById('diag-reconnect'),
+  diagClose: document.getElementById('diag-close'),
 };
+ui.diagAuth.textContent = 'Auth: --';
 
 class BoardView {
   constructor({ x, y, rows, cols, label }) {
@@ -211,6 +218,8 @@ let myImpactTimer = null;
 let enemyImpactTimer = null;
 let bgInterval = null;
 let idToken = null;
+let currentUser = null;
+let authClient = null;
 
 function ensureAudio() {
   if (audioCtx) return;
@@ -292,14 +301,27 @@ function stopPirateLoop() {
   }
 }
 
+const isDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const router = createRouter({
+  screens: {
+    login: ui.screenLogin,
+    menu: ui.screenMenu,
+    setup: ui.screenSetup,
+    game: ui.screenGame,
+  },
+  diagnostics: ui.diagnostics,
+  isAuthenticated: () => Boolean(currentUser),
+  isDev,
+});
+
 const lobbySteps = initLobbySteps(ui);
 const { showStep } = lobbySteps;
 
 initMenu(ui, {
   onPlayMode(mode) {
-    ui.mainMenu.classList.add('hidden');
     lobbySteps.setForcedMode(mode);
     showStep(ui.stepName);
+    router.navigate('/menu/play');
   },
 });
 
@@ -315,13 +337,9 @@ ui.menuSettings.addEventListener('click', () => {
 ui.menuCredits.addEventListener('click', () => {
   ui.menuMessage.textContent = 'Cannon Blitz - 2026.';
 });
-ui.menuExit.addEventListener('click', () => {
-  ui.menuMessage.textContent = 'Use Logout no painel lateral.';
-});
 
 async function setupAuth() {
   const authUi = {
-    overlay: ui.authOverlay,
     message: ui.authMessage,
     stepEmail: ui.authStepEmail,
     stepPassword: ui.authStepPassword,
@@ -331,6 +349,7 @@ async function setupAuth() {
     btnSubmit: ui.authSubmit,
     btnLogin: ui.authLogin,
     btnRegister: ui.authRegister,
+    btnGoogle: document.getElementById('auth-google'),
   };
 
   try {
@@ -345,18 +364,22 @@ async function setupAuth() {
       }
     }
     const config = window.__FIREBASE_CONFIG__ || {};
-    const auth = await initFirebaseAuth(config);
-    initAuthUI(authUi, auth);
-    wireAuthBadge({ authUser: ui.authUser, btnLogout: ui.btnLogout, lobbyUser: ui.lobbyUser, userAvatar: ui.userAvatar }, auth);
-    auth.onAuthStateChanged(async (user) => {
+    authClient = await initFirebaseAuth(config);
+    initAuthUI(authUi, authClient);
+    wireAuthBadge({ authUser: ui.authUser, btnLogout: ui.btnLogout, lobbyUser: ui.lobbyUser, userAvatar: ui.userAvatar }, authClient);
+    authClient.onAuthStateChanged(async (user) => {
+      currentUser = user || null;
       if (user) {
         idToken = await user.getIdToken();
-        const status = await checkAuthStatus(idToken);
-        ui.authStatus.textContent = status.ok ? 'Auth: ok' : 'Auth: invalid';
+        if (isDev) {
+          const status = await checkAuthStatus(idToken);
+          ui.diagAuth.textContent = status.ok ? 'Auth: ok' : 'Auth: invalid';
+        }
       } else {
         idToken = null;
-        ui.authStatus.textContent = 'Auth: --';
+        ui.diagAuth.textContent = 'Auth: --';
       }
+      router.render(window.location.pathname);
     });
   } catch (err) {
     authUi.message.textContent = 'Configure o Firebase para continuar.';
@@ -380,15 +403,17 @@ function setWsUrl(nextUrl) {
     .replace(/^wss:\/\//, 'https://')
     .replace(/^ws:\/\//, 'http://')
     .replace(/\/ws$/, '/health');
+  ui.diagWs.textContent = `WS: ${currentWsUrl}`;
 }
 let pendingJoin = false;
+setWsUrl(currentWsUrl);
 
 function setConnectionState(state) {
-  ui.statusText.textContent = state;
+  ui.diagStatusText.textContent = state;
   if (state.toLowerCase().includes('connect')) {
-    ui.connIndicator.classList.remove('hidden');
+    ui.diagConnIndicator.classList.remove('hidden');
   } else {
-    ui.connIndicator.classList.add('hidden');
+    ui.diagConnIndicator.classList.add('hidden');
   }
 }
 
@@ -419,13 +444,13 @@ function connect() {
       const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(currentWsUrl)}`;
       ui.inviteLink.textContent = `Invite: ${invite}`;
       ui.lobbyMessage.textContent = `Link: ${invite}`;
-      ui.lobby.classList.add('hidden');
       ui.lobbyMessage.textContent = '';
       readyState = false;
       ui.btnReady.textContent = 'Pronto';
       buyingMode = false;
       localStorage.setItem('cannon_room', roomCode);
       localStorage.setItem('cannon_player', playerId);
+      router.navigate('/game');
       return;
     }
     if (msg.type === 'room_state') {
@@ -456,7 +481,7 @@ function connect() {
       if (msg.message === 'Reconexao invalida') {
         localStorage.removeItem('cannon_room');
         localStorage.removeItem('cannon_player');
-        ui.lobby.classList.remove('hidden');
+        router.navigate('/menu/play');
       }
     }
   });
@@ -473,22 +498,22 @@ async function checkBackend() {
     const res = await fetch(healthUrl, { signal: controller.signal });
     if (res.ok) {
       const data = await res.json();
-      ui.backendStatus.textContent = `Backend: ${data.status || 'ok'}`;
+      ui.diagBackend.textContent = `Backend: ${data.status || 'ok'}`;
       backendOnline = true;
       healthFailures = 0;
     } else {
-      ui.backendStatus.textContent = `Backend: error ${res.status}`;
+      ui.diagBackend.textContent = `Backend: error ${res.status}`;
       backendOnline = false;
       healthFailures += 1;
     }
   } catch (err) {
-    ui.backendStatus.textContent = 'Backend: offline';
+    ui.diagBackend.textContent = 'Backend: offline';
     backendOnline = false;
     healthFailures += 1;
   } finally {
     clearTimeout(timeout);
   }
-  ui.btnReconnect.disabled = !backendOnline;
+  ui.diagReconnect.disabled = !backendOnline;
   if (!backendOnline && healthFailures >= 2 && storedWs && !wsParam && currentWsUrl !== defaultWsUrl) {
     localStorage.removeItem('cannon_ws');
     setWsUrl(defaultWsUrl);
@@ -567,10 +592,12 @@ function renderState() {
 
 function send(type, payload) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  const message = { type, ...payload };
-  if (idToken) {
-    message.idToken = idToken;
+  if (!idToken) {
+    ui.lobbyMessage.textContent = 'Autentique-se para jogar.';
+    return;
   }
+  const message = { type, ...payload };
+  message.idToken = idToken;
   socket.send(JSON.stringify(message));
 }
 
@@ -627,6 +654,10 @@ ui.btnAdvanced.addEventListener('click', () => {
   ui.btnAdvanced.textContent = isHidden ? 'Advanced ✓' : 'Advanced';
 });
 
+ui.setupBackMenu.addEventListener('click', () => {
+  router.navigate('/menu');
+});
+
 ui.btnSound.addEventListener('click', async () => {
   audioEnabled = !audioEnabled;
   if (audioEnabled) {
@@ -641,6 +672,11 @@ ui.btnSound.addEventListener('click', async () => {
 });
 
 ui.modalClose.addEventListener('click', hideModal);
+if (ui.diagClose) {
+  ui.diagClose.addEventListener('click', () => {
+    window.history.back();
+  });
+}
 
 ui.btnSettings.addEventListener('click', () => {
   ui.settings.classList.remove('hidden');
@@ -704,10 +740,11 @@ myBoard.onCellClick(({ r, c }) => {
 
 connect();
 setupAuth();
+router.render(window.location.pathname);
 checkBackend();
 setInterval(checkBackend, 10000);
 
-ui.btnReconnect.addEventListener('click', () => {
+ui.diagReconnect.addEventListener('click', () => {
   if (!backendOnline) return;
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.close();
@@ -719,8 +756,8 @@ const urlRoom = params.get('room');
 if (urlRoom) {
   ui.codeInput.value = urlRoom.toUpperCase();
   ui.btnNextName.classList.add('hidden');
-  ui.mainMenu.classList.add('hidden');
   lobbySteps.setForcedMode('join');
+  router.navigate('/menu/play', { replace: true });
   const codeLabel = ui.codeInput.closest('label');
   if (codeLabel) {
     codeLabel.classList.add('hidden');

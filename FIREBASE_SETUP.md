@@ -6,6 +6,7 @@ This project uses **Firebase Auth (client)** and **Firebase Admin SDK (backend)*
 1. Go to Firebase Console: https://console.firebase.google.com/
 2. Create a project (or use existing).
 3. Enable **Authentication → Sign-in method → Email/Password**.
+4. Enable **Authentication → Sign-in method → Google**.
 
 ## 2) Get Web App Config
 1. In **Project Settings → General → Your apps**, add a **Web app**.

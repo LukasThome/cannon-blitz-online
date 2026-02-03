@@ -27,11 +27,22 @@
       color: var(--text);
       font-family: 'Press Start 2P', monospace;
       letter-spacing: 0.5px;
+      min-height: 100vh;
+    }
+    .screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .screen.hidden {
+      display: none;
     }
     .wrap {
       max-width: 1100px;
+      width: 100%;
       margin: 0 auto;
-      padding: 20px;
       display: grid;
       grid-template-columns: 1fr 320px;
       gap: 18px;
@@ -145,18 +156,6 @@
     .legend .enemy { background: #5b2f2f; }
     .legend .impact { background: #9c8a3c; }
 
-    #lobby-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(12, 9, 8, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-    #lobby-overlay.hidden {
-      display: none;
-    }
     .modal {
       position: fixed;
       inset: 0;
@@ -202,6 +201,9 @@
     .menu-card {
       width: 360px;
     }
+    .login-card {
+      width: 380px;
+    }
     .lobby-card label {
       display: flex;
       flex-direction: column;
@@ -231,6 +233,24 @@
     .hidden {
       display: none;
     }
+    .menu-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .diagnostics {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 6, 6, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+    .diagnostics.hidden {
+      display: none;
+    }
 
     @media (max-width: 900px) {
       .wrap {
@@ -244,177 +264,200 @@
     // Firebase config will be loaded from /config.json at runtime
     window.__FIREBASE_CONFIG__ = window.__FIREBASE_CONFIG__ || {};
   </script>
-  <div class="wrap">
-    <div class="stage">
-      <div id="auth-overlay" class="modal">
-        <div class="modal-card">
-          <div class="title">Bem-vindo</div>
-          <div class="message">Entre para jogar com amigos.</div>
-          <div class="row">
-            <button id="auth-google">Continuar com Google</button>
-          </div>
-          <div class="message" id="auth-message"></div>
-          <div id="auth-step-mode">
-            <div class="row">
-              <button id="auth-login">Entrar com Email</button>
-              <button id="auth-register">Criar Conta</button>
-            </div>
-          </div>
-          <div id="auth-step-email" class="hidden">
-            <label>
-              Email
-              <input id="auth-email" placeholder="email@exemplo.com" />
-            </label>
-            <div class="row">
-              <button id="auth-next-email">Continuar</button>
-            </div>
-          </div>
-          <div id="auth-step-password" class="hidden">
-            <label>
-              Senha
-              <input id="auth-password" type="password" />
-            </label>
-            <div class="row">
-              <button id="auth-submit">Confirmar</button>
-            </div>
-          </div>
+
+  <div id="screen-login" class="screen">
+    <div class="modal-card login-card" id="auth-overlay">
+      <div class="title">Bem-vindo</div>
+      <div class="message">Entre para jogar com amigos.</div>
+      <div class="row">
+        <button id="auth-google">Continuar com Google</button>
+      </div>
+      <div class="message" id="auth-message"></div>
+      <div id="auth-step-mode">
+        <div class="row">
+          <button id="auth-login">Entrar com Email</button>
+          <button id="auth-register">Criar Conta</button>
         </div>
       </div>
-      <div id="lobby-overlay">
-        <div id="main-menu" class="lobby-card menu-card">
-          <div class="title">Main Menu</div>
-          <div class="row">
-            <button id="menu-play-btn">Play</button>
-            <button id="menu-multiplayer">Multiplayer</button>
-          </div>
-          <div class="row">
-            <button id="menu-tutorials">Campaign</button>
-            <button id="menu-settings">Settings</button>
-          </div>
-          <div class="row">
-            <button id="menu-credits">Credits</button>
-            <button id="menu-exit">Logout</button>
-          </div>
-          <div id="menu-message" class="message"></div>
-          <div id="menu-play" class="hidden">
-            <div class="row">
-              <button id="play-quick">Quick Match</button>
-              <button id="play-create">Create Room</button>
-            </div>
-            <div class="row">
-              <button id="play-join">Join Room</button>
-              <button id="play-ai">vs AI</button>
-            </div>
-            <div class="row">
-              <button id="menu-back">Back</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="lobby-card">
-          <div class="title">Play Setup</div>
-          <div class="pill" id="lobby-user">Jogador: --</div>
-          <div id="step-name">
-            <label>
-              Seu nome
-              <input id="name-input" placeholder="Seu nome" />
-            </label>
-            <div class="row">
-              <button id="btn-next-name">Continuar</button>
-            </div>
-          </div>
-
-          <div id="step-mode" class="hidden">
-            <div class="row">
-              <button id="btn-create-mode">Criar Sala</button>
-              <button id="btn-join-mode">Entrar</button>
-              <button id="btn-single">Single Player</button>
-            </div>
-            <div class="row">
-              <button id="btn-advanced">Advanced</button>
-            </div>
-            <label id="ws-label" class="hidden">
-              WebSocket URL
-              <input id="ws-input" placeholder="wss://host/ws" />
-            </label>
-          </div>
-
-          <div id="step-join" class="hidden">
-            <label>
-              Código da sala
-              <input id="code-input" placeholder="ABCDE" />
-            </label>
-            <div class="row">
-              <button id="btn-next-join">Continuar</button>
-              <button id="btn-back">Voltar</button>
-            </div>
-          </div>
-
-          <div id="step-single" class="hidden">
-            <label>
-              Dificuldade
-              <select id="difficulty">
-                <option value="easy">Easy</option>
-                <option value="normal" selected>Normal</option>
-                <option value="hard">Hard</option>
-              </select>
-            </label>
-            <div class="row">
-              <button id="btn-next-single">Continuar</button>
-              <button id="btn-back-single">Voltar</button>
-            </div>
-          </div>
-
-          <div id="step-confirm" class="hidden">
-            <div class="message" id="confirm-summary"></div>
-            <div class="row">
-              <button id="btn-create">Confirmar</button>
-              <button id="btn-join">Confirmar</button>
-              <button id="btn-start-single">Confirmar</button>
-              <button id="btn-back-confirm">Voltar</button>
-            </div>
-          </div>
-
-          <div class="message" id="lobby-message"></div>
+      <div id="auth-step-email" class="hidden">
+        <label>
+          Email
+          <input id="auth-email" placeholder="email@exemplo.com" />
+        </label>
+        <div class="row">
+          <button id="auth-next-email">Continuar</button>
         </div>
       </div>
-      <div id="pixi-root"></div>
+      <div id="auth-step-password" class="hidden">
+        <label>
+          Senha
+          <input id="auth-password" type="password" />
+        </label>
+        <div class="row">
+          <button id="auth-submit">Confirmar</button>
+        </div>
+      </div>
     </div>
-    <div class="side">
-      <div class="title">Cannon Blitz</div>
-      <div class="pill" id="status"><span id="status-text">Connecting...</span> <span id="conn-indicator" class="spinner"></span></div>
-      <div class="pill" id="backend-status">Backend: --</div>
-      <div class="pill"><span id="user-avatar" class="avatar">?</span><span id="auth-user">User: --</span></div>
-      <div class="pill" id="auth-status">Auth: --</div>
-      <div class="row">
-        <button id="btn-reconnect" disabled>Reconectar</button>
-        <button id="btn-sound">Som: Off</button>
-        <button id="btn-settings">Settings</button>
-        <button id="btn-logout" disabled>Logout</button>
+  </div>
+
+  <div id="screen-menu" class="screen hidden">
+    <div class="menu-wrap">
+      <div id="main-menu" class="lobby-card menu-card">
+        <div class="title">Main Menu</div>
+        <div class="row">
+          <button id="menu-play-btn">Play</button>
+          <button id="menu-multiplayer">Multiplayer</button>
+        </div>
+        <div class="row">
+          <button id="menu-tutorials">Campaign</button>
+          <button id="menu-settings">Settings</button>
+        </div>
+        <div class="row">
+          <button id="menu-credits">Credits</button>
+          <button id="menu-exit">Logout</button>
+        </div>
+        <div id="menu-message" class="message"></div>
+        <div id="menu-play" class="hidden">
+          <div class="row">
+            <button id="play-quick">Quick Match</button>
+            <button id="play-create">Create Room</button>
+          </div>
+          <div class="row">
+            <button id="play-join">Join Room</button>
+            <button id="play-ai">vs AI</button>
+          </div>
+          <div class="row">
+            <button id="menu-back">Back</button>
+          </div>
+        </div>
       </div>
-      <div class="pill" id="room-code">Sala: --</div>
-      <div class="pill" id="invite-link">Invite: --</div>
-      <div class="row">
-        <button id="btn-copy-link">Copiar link</button>
+    </div>
+  </div>
+
+  <div id="screen-setup" class="screen hidden">
+    <div class="menu-wrap">
+      <div class="lobby-card">
+        <div class="title">Play Setup</div>
+        <div class="row">
+          <button id="setup-back-menu">Back</button>
+        </div>
+        <div class="pill" id="lobby-user">Jogador: --</div>
+        <div id="step-name">
+          <label>
+            Seu nome
+            <input id="name-input" placeholder="Seu nome" />
+          </label>
+          <div class="row">
+            <button id="btn-next-name">Continuar</button>
+          </div>
+        </div>
+
+        <div id="step-mode" class="hidden">
+          <div class="row">
+            <button id="btn-create-mode">Criar Sala</button>
+            <button id="btn-join-mode">Entrar</button>
+            <button id="btn-single">Single Player</button>
+          </div>
+          <div class="row">
+            <button id="btn-advanced">Advanced</button>
+          </div>
+          <label id="ws-label" class="hidden">
+            WebSocket URL
+            <input id="ws-input" placeholder="wss://host/ws" />
+          </label>
+        </div>
+
+        <div id="step-join" class="hidden">
+          <label>
+            Código da sala
+            <input id="code-input" placeholder="ABCDE" />
+          </label>
+          <div class="row">
+            <button id="btn-next-join">Continuar</button>
+            <button id="btn-back">Voltar</button>
+          </div>
+        </div>
+
+        <div id="step-single" class="hidden">
+          <label>
+            Dificuldade
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+          <div class="row">
+            <button id="btn-next-single">Continuar</button>
+            <button id="btn-back-single">Voltar</button>
+          </div>
+        </div>
+
+        <div id="step-confirm" class="hidden">
+          <div class="message" id="confirm-summary"></div>
+          <div class="row">
+            <button id="btn-create">Confirmar</button>
+            <button id="btn-join">Confirmar</button>
+            <button id="btn-start-single">Confirmar</button>
+            <button id="btn-back-confirm">Voltar</button>
+          </div>
+        </div>
+
+        <div class="message" id="lobby-message"></div>
       </div>
-      <div class="pill" id="player-list">Players: --</div>
-      <div class="pill" id="turn">Turn: --</div>
-      <div class="pill" id="saldo">Saldo: 0</div>
-      <div class="row">
-        <button id="btn-normal">Tiro Normal</button>
-        <button id="btn-precise">Tiro Preciso (1)</button>
-        <button id="btn-strong">Tiro Forte (3)</button>
+    </div>
+  </div>
+
+  <div id="screen-game" class="screen hidden">
+    <div class="wrap">
+      <div class="stage">
+        <div id="pixi-root"></div>
       </div>
-      <div class="row">
-        <button id="btn-buy">Comprar Base (2)</button>
-        <button id="btn-ready">Pronto</button>
+      <div class="side">
+        <div class="title">Cannon Blitz</div>
+        <div class="pill"><span id="user-avatar" class="avatar">?</span><span id="auth-user">User: --</span></div>
+        <div class="row">
+          <button id="btn-sound">Som: Off</button>
+          <button id="btn-settings">Settings</button>
+        </div>
+        <div class="pill" id="room-code">Sala: --</div>
+        <div class="pill" id="invite-link">Invite: --</div>
+        <div class="row">
+          <button id="btn-copy-link">Copiar link</button>
+        </div>
+        <div class="pill" id="player-list">Players: --</div>
+        <div class="pill" id="turn">Turn: --</div>
+        <div class="pill" id="saldo">Saldo: 0</div>
+        <div class="row">
+          <button id="btn-normal">Tiro Normal</button>
+          <button id="btn-precise">Tiro Preciso (1)</button>
+          <button id="btn-strong">Tiro Forte (3)</button>
+        </div>
+        <div class="row">
+          <button id="btn-buy">Comprar Base (2)</button>
+          <button id="btn-ready">Pronto</button>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="legend">
+          <span class="me">Sua base</span>
+          <span class="enemy">Base inimiga</span>
+          <span class="impact">Impacto</span>
+          <span>Vazio</span>
+        </div>
       </div>
-      <div class="message" id="message"></div>
-      <div class="legend">
-        <span class="me">Sua base</span>
-        <span class="enemy">Base inimiga</span>
-        <span class="impact">Impacto</span>
-        <span>Vazio</span>
+    </div>
+  </div>
+
+  <div id="diagnostics" class="diagnostics hidden">
+    <div class="modal-card">
+      <div class="title">Diagnostics</div>
+      <div class="pill" id="diag-status"><span id="diag-status-text">Connecting...</span> <span id="diag-conn-indicator" class="spinner"></span></div>
+      <div class="pill" id="diag-backend">Backend: --</div>
+      <div class="pill" id="diag-auth">Auth: --</div>
+      <div class="pill" id="diag-ws">WS: --</div>
+      <div class="row">
+        <button id="diag-reconnect" disabled>Reconectar</button>
+        <button id="diag-close">Close</button>
       </div>
     </div>
   </div>

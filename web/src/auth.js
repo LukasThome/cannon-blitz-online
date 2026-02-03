@@ -16,5 +16,7 @@ export async function initFirebaseAuth(config) {
     googleLogin: () => authModule.signInWithPopup(auth, provider),
     logout: () => authModule.signOut(auth),
     onAuthStateChanged: (cb) => authModule.onAuthStateChanged(auth, cb),
+    onIdTokenChanged: (cb) => authModule.onIdTokenChanged(auth, cb),
+    getIdToken: (user) => authModule.getIdToken(user),
   };
 }

@@ -1,12 +1,9 @@
-import os
-
 from fastapi.testclient import TestClient
 
 from server.app.main import app
 
 
 client = TestClient(app)
-
 
 def test_auth_verify_requires_token():
     response = client.get("/auth/verify")

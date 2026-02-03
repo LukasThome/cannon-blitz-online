@@ -24,9 +24,11 @@ export function wireAuthBadge(ui, auth) {
     }
   });
 
-  ui.btnLogout.addEventListener('click', async () => {
-    if (auth.logout) {
-      await auth.logout();
-    }
-  });
+  if (ui.btnLogout) {
+    ui.btnLogout.addEventListener('click', async () => {
+      if (auth.logout) {
+        await auth.logout();
+      }
+    });
+  }
 }

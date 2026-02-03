@@ -89,16 +89,6 @@ describe('Auth UI flow', () => {
     expect(ui.message.textContent.toLowerCase()).toContain('erro');
   });
 
-  it('hides overlay when user is authenticated', () => {
-    const ui = setupDom();
-    let cb;
-    const onAuthStateChanged = (handler) => { cb = handler; };
-    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged, googleLogin: vi.fn() });
-    expect(ui.overlay.classList.contains('hidden')).toBe(false);
-    cb({ uid: 'abc' });
-    expect(ui.overlay.classList.contains('hidden')).toBe(true);
-  });
-
   it('calls google login when button clicked', async () => {
     const googleLogin = vi.fn().mockResolvedValue({});
     const ui = setupDom();
