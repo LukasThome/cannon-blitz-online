@@ -50,12 +50,15 @@ const ui = {
   lobby: document.getElementById('lobby-overlay'),
   lobbyMessage: document.getElementById('lobby-message'),
   nameInput: document.getElementById('name-input'),
+  btnNextName: document.getElementById('btn-next-name'),
   wsLabel: document.getElementById('ws-label'),
   wsInput: document.getElementById('ws-input'),
   difficulty: document.getElementById('difficulty'),
   codeInput: document.getElementById('code-input'),
   btnCreate: document.getElementById('btn-create'),
+  btnJoinMode: document.getElementById('btn-join-mode'),
   btnSingle: document.getElementById('btn-single'),
+  btnStartSingle: document.getElementById('btn-start-single'),
   btnJoin: document.getElementById('btn-join'),
   btnAdvanced: document.getElementById('btn-advanced'),
   modal: document.getElementById('modal'),
@@ -66,6 +69,10 @@ const ui = {
   settingsClose: document.getElementById('settings-close'),
   toggleSounds: document.getElementById('toggle-sounds'),
   togglePopups: document.getElementById('toggle-popups'),
+  stepName: document.getElementById('step-name'),
+  stepMode: document.getElementById('step-mode'),
+  stepJoin: document.getElementById('step-join'),
+  stepSingle: document.getElementById('step-single'),
 };
 
 class BoardView {
@@ -144,8 +151,6 @@ let state = null;
 let buyingMode = false;
 let readyState = false;
 let roomCode = null;
-let clientImpacts = [];
-let impactTimer = null;
 let lastShooterId = null;
 let backendOnline = false;
 let healthFailures = 0;
@@ -155,6 +160,11 @@ let lastPhase = null;
 let lastWinnerId = null;
 let popupsEnabled = true;
 let autoJoinTriggered = false;
+let myImpacts = [];
+let enemyImpacts = [];
+let myImpactTimer = null;
+let enemyImpactTimer = null;
+let bgInterval = null;
 
 function ensureAudio() {
   if (audioCtx) return;
@@ -191,11 +201,57 @@ function playLose() {
 }
 
 function playShot() {
-  playTone({ freq: 520, duration: 0.06, type: 'square', gain: 0.05 });
+  playCannon();
 }
 
 function playHit() {
   playTone({ freq: 920, duration: 0.07, type: 'triangle', gain: 0.06 });
+}
+
+function playCannon() {
+  if (!audioEnabled) return;
+  ensureAudio();
+  const duration = 0.2;
+  const bufferSize = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+  const source = audioCtx.createBufferSource();
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.08;
+  source.buffer = buffer;
+  source.connect(gain).connect(audioCtx.destination);
+  source.start();
+}
+
+function playPirateLoop() {
+  if (!audioEnabled) return;
+  ensureAudio();
+  if (bgInterval) return;
+  const melody = [262, 294, 330, 392, 440, 392, 330, 294];
+  let index = 0;
+  bgInterval = setInterval(() => {
+    if (!audioEnabled) return;
+    playTone({ freq: melody[index % melody.length], duration: 0.12, type: 'square', gain: 0.015 });
+    index += 1;
+  }, 220);
+}
+
+function stopPirateLoop() {
+  if (bgInterval) {
+    clearInterval(bgInterval);
+    bgInterval = null;
+  }
+}
+
+function showStep(step) {
+  ui.stepName.classList.add('hidden');
+  ui.stepMode.classList.add('hidden');
+  ui.stepJoin.classList.add('hidden');
+  ui.stepSingle.classList.add('hidden');
+  step.classList.remove('hidden');
 }
 
 function showModal(title, body) {
@@ -267,14 +323,21 @@ function connect() {
       state = msg.data;
       lastShooterId = state.last_shooter_id;
       if (state.last_impacts && state.last_impacts.length) {
-        clientImpacts = state.last_impacts;
-        if (impactTimer) {
-          clearTimeout(impactTimer);
+        if (lastShooterId === playerId) {
+          myImpacts = state.last_impacts;
+          if (myImpactTimer) clearTimeout(myImpactTimer);
+          myImpactTimer = setTimeout(() => {
+            myImpacts = [];
+            renderState();
+          }, 1000);
+        } else {
+          enemyImpacts = state.last_impacts;
+          if (enemyImpactTimer) clearTimeout(enemyImpactTimer);
+          enemyImpactTimer = setTimeout(() => {
+            enemyImpacts = [];
+            renderState();
+          }, 1000);
         }
-        impactTimer = setTimeout(() => {
-          clientImpacts = [];
-          renderState();
-        }, 1000);
       }
       renderState();
     }
@@ -335,9 +398,8 @@ function renderState() {
   const enemy = state.players.find((p) => p.id !== playerId);
   const myBases = state.bases[playerId] || [];
   const enemyBases = enemy ? state.bases[enemy.id] || [] : [];
-  const impacts = clientImpacts;
-  const impactsOnEnemy = lastShooterId === playerId ? impacts : [];
-  const impactsOnMe = lastShooterId && lastShooterId !== playerId ? impacts : [];
+  const impactsOnEnemy = myImpacts;
+  const impactsOnMe = enemyImpacts;
 
   ui.turn.textContent = `Turn: ${state.turn_player_id === playerId ? 'Você' : 'Oponente'}`;
   ui.saldo.textContent = `Saldo: ${me ? me.saldo : 0}`;
@@ -381,7 +443,7 @@ function renderState() {
     }
   }
 
-  if (clientImpacts.length && lastShooterId !== null) {
+  if ((myImpacts.length || enemyImpacts.length) && lastShooterId !== null) {
     const enemyHit = enemy && impactsOnEnemy.some((pos) => enemyBases.some((b) => b[0] === pos[0] && b[1] === pos[1]));
     const meHit = impactsOnMe.some((pos) => myBases.some((b) => b[0] === pos[0] && b[1] === pos[1]));
     playShot();
@@ -400,7 +462,11 @@ function send(type, payload) {
 }
 
 ui.btnCreate.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim() || 'Jogador';
+  const name = ui.nameInput.value.trim();
+  if (!name) {
+    ui.lobbyMessage.textContent = 'Digite seu nome.';
+    return;
+  }
   const wsUrl = ui.wsInput.value.trim();
   if (wsUrl) {
     localStorage.setItem('cannon_ws', wsUrl);
@@ -411,14 +477,22 @@ ui.btnCreate.addEventListener('click', () => {
   send('create_room', { name });
 });
 
-ui.btnSingle.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim() || 'Jogador';
+ui.btnStartSingle.addEventListener('click', () => {
+  const name = ui.nameInput.value.trim();
+  if (!name) {
+    ui.lobbyMessage.textContent = 'Digite seu nome.';
+    return;
+  }
   const difficulty = ui.difficulty.value;
   send('create_ai_room', { name, difficulty });
 });
 
 ui.btnJoin.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim() || 'Jogador';
+  const name = ui.nameInput.value.trim();
+  if (!name) {
+    ui.lobbyMessage.textContent = 'Digite seu nome.';
+    return;
+  }
   const code = ui.codeInput.value.trim().toUpperCase();
   if (!code) {
     ui.lobbyMessage.textContent = 'Informe o codigo da sala.';
@@ -440,11 +514,32 @@ ui.btnAdvanced.addEventListener('click', () => {
   ui.btnAdvanced.textContent = isHidden ? 'Advanced ✓' : 'Advanced';
 });
 
+ui.btnNextName.addEventListener('click', () => {
+  const name = ui.nameInput.value.trim();
+  if (!name) {
+    ui.lobbyMessage.textContent = 'Digite seu nome para continuar.';
+    return;
+  }
+  ui.lobbyMessage.textContent = '';
+  showStep(ui.stepMode);
+});
+
+ui.btnJoinMode.addEventListener('click', () => {
+  showStep(ui.stepJoin);
+});
+
+ui.btnSingle.addEventListener('click', () => {
+  showStep(ui.stepSingle);
+});
+
 ui.btnSound.addEventListener('click', async () => {
   audioEnabled = !audioEnabled;
   if (audioEnabled) {
     ensureAudio();
     await audioCtx.resume();
+    playPirateLoop();
+  } else {
+    stopPirateLoop();
   }
   ui.btnSound.textContent = audioEnabled ? 'Som: On' : 'Som: Off';
   ui.toggleSounds.checked = audioEnabled;
@@ -465,6 +560,9 @@ ui.toggleSounds.addEventListener('change', async (evt) => {
   if (audioEnabled) {
     ensureAudio();
     await audioCtx.resume();
+    playPirateLoop();
+  } else {
+    stopPirateLoop();
   }
   ui.btnSound.textContent = audioEnabled ? 'Som: On' : 'Som: Off';
 });
@@ -524,9 +622,7 @@ ui.btnReconnect.addEventListener('click', () => {
 const urlRoom = params.get('room');
 if (urlRoom) {
   ui.codeInput.value = urlRoom.toUpperCase();
-  ui.btnCreate.classList.add('hidden');
-  ui.btnSingle.classList.add('hidden');
-  ui.btnJoin.classList.add('hidden');
+  ui.btnNextName.classList.add('hidden');
   const codeLabel = ui.codeInput.closest('label');
   if (codeLabel) {
     codeLabel.classList.add('hidden');
@@ -546,6 +642,9 @@ if (urlRoom) {
       pendingJoin = true;
     }
   });
+  showStep(ui.stepName);
+} else {
+  showStep(ui.stepName);
 }
 if (wsParam) {
   ui.wsInput.value = wsParam;

@@ -198,6 +198,11 @@
       font-family: inherit;
       font-size: 10px;
     }
+    #step-name, #step-mode, #step-join, #step-single {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     .hidden {
       display: none;
     }
@@ -215,36 +220,55 @@
       <div id="lobby-overlay">
         <div class="lobby-card">
           <div class="title">Multiplayer Lobby</div>
-          <label>
-            Nome
-            <input id="name-input" placeholder="Seu nome" />
-          </label>
-          <div class="row">
-            <button id="btn-advanced">Advanced</button>
+          <div id="step-name">
+            <label>
+              Nome
+              <input id="name-input" placeholder="Seu nome" />
+            </label>
+            <div class="row">
+              <button id="btn-next-name">Continuar</button>
+            </div>
           </div>
-          <label id="ws-label" class="hidden">
-            WebSocket URL
-            <input id="ws-input" placeholder="wss://host/ws" />
-          </label>
-          <div class="row">
-            <button id="btn-create">Criar Sala</button>
-            <button id="btn-single">Single Player</button>
+
+          <div id="step-mode" class="hidden">
+            <div class="row">
+              <button id="btn-create">Criar Sala</button>
+              <button id="btn-join-mode">Entrar</button>
+              <button id="btn-single">Single Player</button>
+            </div>
+            <div class="row">
+              <button id="btn-advanced">Advanced</button>
+            </div>
+            <label id="ws-label" class="hidden">
+              WebSocket URL
+              <input id="ws-input" placeholder="wss://host/ws" />
+            </label>
           </div>
-          <label>
-            Dificuldade
-            <select id="difficulty">
-              <option value="easy">Easy</option>
-              <option value="normal" selected>Normal</option>
-              <option value="hard">Hard</option>
-            </select>
-          </label>
-          <label>
-            Codigo da Sala
-            <input id="code-input" placeholder="ABCDE" />
-          </label>
-          <div class="row">
-            <button id="btn-join">Entrar na Sala</button>
+
+          <div id="step-join" class="hidden">
+            <label>
+              Codigo da Sala
+              <input id="code-input" placeholder="ABCDE" />
+            </label>
+            <div class="row">
+              <button id="btn-join">Entrar na Sala</button>
+            </div>
           </div>
+
+          <div id="step-single" class="hidden">
+            <label>
+              Dificuldade
+              <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="normal" selected>Normal</option>
+                <option value="hard">Hard</option>
+              </select>
+            </label>
+            <div class="row">
+              <button id="btn-start-single">Iniciar</button>
+            </div>
+          </div>
+
           <div class="message" id="lobby-message"></div>
         </div>
       </div>
