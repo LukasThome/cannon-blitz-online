@@ -271,7 +271,7 @@
           <div class="pill" id="lobby-user">Jogador: --</div>
           <div id="step-name">
             <label>
-              Nome
+              Seu nome
               <input id="name-input" placeholder="Seu nome" />
             </label>
             <div class="row">
@@ -281,7 +281,7 @@
 
           <div id="step-mode" class="hidden">
             <div class="row">
-              <button id="btn-create">Criar Sala</button>
+              <button id="btn-create-mode">Criar Sala</button>
               <button id="btn-join-mode">Entrar</button>
               <button id="btn-single">Single Player</button>
             </div>
@@ -296,11 +296,12 @@
 
           <div id="step-join" class="hidden">
             <label>
-              Codigo da Sala
+              Código da sala
               <input id="code-input" placeholder="ABCDE" />
             </label>
             <div class="row">
-              <button id="btn-join">Entrar na Sala</button>
+              <button id="btn-next-join">Continuar</button>
+              <button id="btn-back">Voltar</button>
             </div>
           </div>
 
@@ -314,7 +315,18 @@
               </select>
             </label>
             <div class="row">
-              <button id="btn-start-single">Iniciar</button>
+              <button id="btn-next-single">Continuar</button>
+              <button id="btn-back-single">Voltar</button>
+            </div>
+          </div>
+
+          <div id="step-confirm" class="hidden">
+            <div class="message" id="confirm-summary"></div>
+            <div class="row">
+              <button id="btn-create">Confirmar</button>
+              <button id="btn-join">Confirmar</button>
+              <button id="btn-start-single">Confirmar</button>
+              <button id="btn-back-confirm">Voltar</button>
             </div>
           </div>
 
