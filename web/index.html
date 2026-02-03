@@ -215,8 +215,42 @@
   </style>
 </head>
 <body>
+  <script>
+    // Firebase config goes here
+    window.__FIREBASE_CONFIG__ = window.__FIREBASE_CONFIG__ || {};
+  </script>
   <div class="wrap">
-      <div class="stage">
+    <div class="stage">
+      <div id="auth-overlay" class="modal">
+        <div class="modal-card">
+          <div class="title">Login</div>
+          <div id="auth-message" class="message"></div>
+          <div id="auth-step-mode">
+            <div class="row">
+              <button id="auth-login">Entrar</button>
+              <button id="auth-register">Registrar</button>
+            </div>
+          </div>
+          <div id="auth-step-email" class="hidden">
+            <label>
+              Email
+              <input id="auth-email" placeholder="email@exemplo.com" />
+            </label>
+            <div class="row">
+              <button id="auth-next-email">Continuar</button>
+            </div>
+          </div>
+          <div id="auth-step-password" class="hidden">
+            <label>
+              Senha
+              <input id="auth-password" type="password" />
+            </label>
+            <div class="row">
+              <button id="auth-submit">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="lobby-overlay">
         <div class="lobby-card">
           <div class="title">Multiplayer Lobby</div>

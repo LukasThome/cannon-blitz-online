@@ -8,3 +8,4 @@
 - Added CI tests and expanded BDD coverage.
 - Switched default backend to Koyeb WebSocket URL.
 - Added TDD policy, API/component/unit tests, and frontend test runner in CI.
+- Added Firebase login/register screens and step-by-step auth flow.

@@ -43,6 +43,17 @@ https://your-vercel-app.vercel.app/?ws=wss://your-railway-app.up.railway.app/ws
 - This project follows strict TDD: write tests first (API, component, unit), then implement.
 - New tests are required for every iteration and are enforced in CI.
 
+## Firebase Auth
+Set your Firebase config in `web/index.html`:
+```js
+window.__FIREBASE_CONFIG__ = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  appId: "..."
+};
+```
+
 ## Structure
 - `docs/` Original UML and requirements
 - `server/` FastAPI + WebSockets multiplayer backend

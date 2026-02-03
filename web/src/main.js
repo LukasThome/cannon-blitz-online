@@ -1,4 +1,6 @@
 import { initLobbySteps } from './lobby.js';
+import { initAuthUI } from './auth_ui.js';
+import { initFirebaseAuth } from './auth.js';
 
 const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
@@ -75,6 +77,17 @@ const ui = {
   stepMode: document.getElementById('step-mode'),
   stepJoin: document.getElementById('step-join'),
   stepSingle: document.getElementById('step-single'),
+  authOverlay: document.getElementById('auth-overlay'),
+  authMessage: document.getElementById('auth-message'),
+  authStepMode: document.getElementById('auth-step-mode'),
+  authStepEmail: document.getElementById('auth-step-email'),
+  authStepPassword: document.getElementById('auth-step-password'),
+  authEmail: document.getElementById('auth-email'),
+  authPassword: document.getElementById('auth-password'),
+  authNextEmail: document.getElementById('auth-next-email'),
+  authSubmit: document.getElementById('auth-submit'),
+  authLogin: document.getElementById('auth-login'),
+  authRegister: document.getElementById('auth-register'),
 };
 
 class BoardView {
@@ -249,6 +262,29 @@ function stopPirateLoop() {
 }
 
 const { showStep } = initLobbySteps(ui);
+
+async function setupAuth() {
+  const authUi = {
+    overlay: ui.authOverlay,
+    message: ui.authMessage,
+    stepEmail: ui.authStepEmail,
+    stepPassword: ui.authStepPassword,
+    email: ui.authEmail,
+    password: ui.authPassword,
+    btnNextEmail: ui.authNextEmail,
+    btnSubmit: ui.authSubmit,
+    btnLogin: ui.authLogin,
+    btnRegister: ui.authRegister,
+  };
+
+  try {
+    const config = window.__FIREBASE_CONFIG__ || {};
+    const auth = await initFirebaseAuth(config);
+    initAuthUI(authUi, auth);
+  } catch (err) {
+    authUi.message.textContent = 'Configure o Firebase para continuar.';
+  }
+}
 
 function showModal(title, body) {
   if (!popupsEnabled) return;
@@ -586,6 +622,7 @@ myBoard.onCellClick(({ r, c }) => {
 });
 
 connect();
+setupAuth();
 checkBackend();
 setInterval(checkBackend, 10000);
 
