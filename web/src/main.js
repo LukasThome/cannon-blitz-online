@@ -48,10 +48,12 @@ const ui = {
   lobby: document.getElementById('lobby-overlay'),
   lobbyMessage: document.getElementById('lobby-message'),
   nameInput: document.getElementById('name-input'),
+  wsLabel: document.getElementById('ws-label'),
   wsInput: document.getElementById('ws-input'),
   codeInput: document.getElementById('code-input'),
   btnCreate: document.getElementById('btn-create'),
   btnJoin: document.getElementById('btn-join'),
+  btnAdvanced: document.getElementById('btn-advanced'),
 };
 
 class BoardView {
@@ -287,6 +289,12 @@ ui.btnJoin.addEventListener('click', () => {
   send('join_room', { name, room_code: code });
 });
 
+ui.btnAdvanced.addEventListener('click', () => {
+  const isHidden = ui.wsLabel.classList.contains('hidden');
+  ui.wsLabel.classList.toggle('hidden', !isHidden);
+  ui.btnAdvanced.textContent = isHidden ? 'Advanced ✓' : 'Advanced';
+});
+
 ui.btnNormal.addEventListener('click', () => send('shot', { shot_type: 'normal' }));
 ui.btnPrecise.addEventListener('click', () => send('shot', { shot_type: 'precise' }));
 ui.btnStrong.addEventListener('click', () => send('shot', { shot_type: 'strong' }));
@@ -341,4 +349,6 @@ if (urlRoom) {
 }
 if (wsParam) {
   ui.wsInput.value = wsParam;
+  ui.wsLabel.classList.remove('hidden');
+  ui.btnAdvanced.textContent = 'Advanced ✓';
 }

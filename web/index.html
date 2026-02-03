@@ -159,6 +159,9 @@
       font-family: inherit;
       font-size: 10px;
     }
+    .hidden {
+      display: none;
+    }
 
     @media (max-width: 900px) {
       .wrap {
@@ -177,9 +180,12 @@
             Nome
             <input id="name-input" placeholder="Seu nome" />
           </label>
-          <label>
+          <div class="row">
+            <button id="btn-advanced">Advanced</button>
+          </div>
+          <label id="ws-label" class="hidden">
             WebSocket URL
-            <input id="ws-input" placeholder="ws://host:8000/ws" />
+            <input id="ws-input" placeholder="wss://host/ws" />
           </label>
           <div class="row">
             <button id="btn-create">Criar Sala</button>
