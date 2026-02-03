@@ -13,12 +13,20 @@ function readEnv(filePath) {
 }
 
 const envPath = path.resolve('.env');
-if (!fs.existsSync(envPath)) {
-  console.error('Missing .env file. Copy .env.example to .env and fill values.');
-  process.exit(1);
+let env = {};
+if (fs.existsSync(envPath)) {
+  env = readEnv(envPath);
+} else {
+  env = {
+    FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
+    FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+    FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET,
+    FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    FIREBASE_APP_ID: process.env.FIREBASE_APP_ID,
+    FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID,
+  };
 }
-
-const env = readEnv(envPath);
 const config = {
   apiKey: env.FIREBASE_API_KEY,
   authDomain: env.FIREBASE_AUTH_DOMAIN,
@@ -28,6 +36,14 @@ const config = {
   appId: env.FIREBASE_APP_ID,
   measurementId: env.FIREBASE_MEASUREMENT_ID,
 };
+
+const missing = Object.entries(config)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+if (missing.length) {
+  console.error(`Missing Firebase env values: ${missing.join(', ')}`);
+  process.exit(1);
+}
 
 const outPath = path.resolve('config.json');
 fs.writeFileSync(outPath, JSON.stringify(config, null, 2));

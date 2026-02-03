@@ -76,6 +76,7 @@ Set these environment variables in Vercel (Project Settings → Environment Vari
 - `FIREBASE_MEASUREMENT_ID`
 
 Vercel will run `npm run generate:config` (see `web/vercel.json`) to create `web/config.json` during build.
+Make sure the Firebase env vars are set in Vercel; the build will fail if any are missing.
 
 ## Structure
 - `docs/` Original UML and requirements
