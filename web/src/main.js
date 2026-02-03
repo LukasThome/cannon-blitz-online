@@ -2,8 +2,8 @@ const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
 const wsParam = params.get('ws');
 const storedWs = localStorage.getItem('cannon_ws');
-const WS_URL = wsParam || storedWs || defaultWsUrl;
-const healthUrl = WS_URL
+let currentWsUrl = wsParam || storedWs || defaultWsUrl;
+let healthUrl = currentWsUrl
   .replace(/^wss:\/\//, 'https://')
   .replace(/^ws:\/\//, 'http://')
   .replace(/\/ws$/, '/health');
@@ -136,6 +136,15 @@ let clientImpacts = [];
 let impactTimer = null;
 let lastShooterId = null;
 let backendOnline = false;
+let healthFailures = 0;
+
+function setWsUrl(nextUrl) {
+  currentWsUrl = nextUrl;
+  healthUrl = currentWsUrl
+    .replace(/^wss:\/\//, 'https://')
+    .replace(/^ws:\/\//, 'http://')
+    .replace(/\/ws$/, '/health');
+}
 let pendingJoin = false;
 
 function setConnectionState(state) {
@@ -149,7 +158,7 @@ function setConnectionState(state) {
 
 function connect() {
   setConnectionState('Connecting...');
-  socket = new WebSocket(WS_URL);
+  socket = new WebSocket(currentWsUrl);
   socket.addEventListener('open', () => {
     setConnectionState('Connected');
     const storedRoom = localStorage.getItem('cannon_room');
@@ -171,7 +180,7 @@ function connect() {
       playerId = msg.player_id;
       roomCode = msg.room_code;
       ui.roomCode.textContent = `Sala: ${roomCode}`;
-      const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(WS_URL)}`;
+      const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(currentWsUrl)}`;
       ui.inviteLink.textContent = `Invite: ${invite}`;
       ui.lobbyMessage.textContent = `Link: ${invite}`;
       ui.lobby.classList.add('hidden');
@@ -223,17 +232,29 @@ async function checkBackend() {
       const data = await res.json();
       ui.backendStatus.textContent = `Backend: ${data.status || 'ok'}`;
       backendOnline = true;
+      healthFailures = 0;
     } else {
       ui.backendStatus.textContent = `Backend: error ${res.status}`;
       backendOnline = false;
+      healthFailures += 1;
     }
   } catch (err) {
     ui.backendStatus.textContent = 'Backend: offline';
     backendOnline = false;
+    healthFailures += 1;
   } finally {
     clearTimeout(timeout);
   }
   ui.btnReconnect.disabled = !backendOnline;
+  if (!backendOnline && healthFailures >= 2 && storedWs && !wsParam && currentWsUrl !== defaultWsUrl) {
+    localStorage.removeItem('cannon_ws');
+    setWsUrl(defaultWsUrl);
+    ui.message.textContent = 'Backend offline. Fallback to default.';
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.close();
+    }
+    connect();
+  }
 }
 
 function renderState() {
@@ -279,6 +300,9 @@ ui.btnCreate.addEventListener('click', () => {
   const wsUrl = ui.wsInput.value.trim();
   if (wsUrl) {
     localStorage.setItem('cannon_ws', wsUrl);
+    if (!wsParam) {
+      setWsUrl(wsUrl);
+    }
   }
   send('create_room', { name });
 });
@@ -293,6 +317,9 @@ ui.btnJoin.addEventListener('click', () => {
   const wsUrl = ui.wsInput.value.trim();
   if (wsUrl) {
     localStorage.setItem('cannon_ws', wsUrl);
+    if (!wsParam) {
+      setWsUrl(wsUrl);
+    }
   }
   send('join_room', { name, room_code: code });
 });
@@ -318,7 +345,7 @@ ui.btnReady.addEventListener('click', () => {
 
 ui.btnCopyLink.addEventListener('click', async () => {
   if (!roomCode) return;
-  const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(WS_URL)}`;
+  const invite = `${location.origin}${location.pathname}?room=${roomCode}&ws=${encodeURIComponent(currentWsUrl)}`;
   try {
     await navigator.clipboard.writeText(invite);
     ui.message.textContent = 'Link copiado.';
