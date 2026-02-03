@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import random
 from typing import Dict
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -25,6 +26,57 @@ app.add_middleware(
 
 rooms = RoomManager()
 lock = asyncio.Lock()
+
+
+def _ai_place_bases(room: Room) -> None:
+    ai_id = room.ai_player_id
+    if not ai_id:
+        return
+    game = room.game
+    bases = game.state.bases[ai_id]
+    all_positions = list(game.state.all_positions())
+    random.shuffle(all_positions)
+    for pos in all_positions:
+        if len(bases) >= game.state.max_bases:
+            break
+        if pos in bases:
+            continue
+        game.place_base(ai_id, pos)
+
+
+def _ai_choose_shot(room: Room) -> str:
+    game = room.game
+    ai = game.state.players[room.ai_player_id]
+    saldo = ai.saldo
+    difficulty = room.ai_difficulty
+    if difficulty == "easy":
+        return "normal"
+    if difficulty == "hard":
+        if saldo >= 3:
+            return "strong"
+        if saldo >= 1:
+            return "precise"
+        return "normal"
+    # normal
+    if saldo >= 1 and random.random() < 0.5:
+        return "precise"
+    return "normal"
+
+
+def _apply_ai(room: Room) -> None:
+    if not room.ai_player_id:
+        return
+    game = room.game
+    ai_id = room.ai_player_id
+
+    if game.state.phase == "placement":
+        if not game.state.players[ai_id].placement_ready:
+            _ai_place_bases(room)
+        return
+
+    if game.state.phase == "battle" and game.state.turn_player_id == ai_id:
+        shot_type = _ai_choose_shot(room)
+        game.state.last_message, game.state.last_impacts = game.shot(ai_id, shot_type)
 
 
 @app.get("/health")
@@ -60,6 +112,23 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     await ws.send_json(
                         {"type": "joined", "player_id": player_id, "room_code": room_code}
                     )
+                    _apply_ai(room)
+                    await broadcast_room(room)
+                elif msg_type == "create_ai_room":
+                    name = message.get("name", "Jogador")
+                    difficulty = message.get("difficulty", "normal")
+                    room = rooms.create_room()
+                    room.ai_difficulty = difficulty
+                    player_id = room.game.add_player(name)
+                    room.ai_player_id = room.game.add_ai_player("CPU")
+                    room.connections[player_id] = ws
+                    room_code = room.code
+                    room.game.set_ready(player_id, True)
+                    room.game.set_ready(room.ai_player_id, True)
+                    _apply_ai(room)
+                    await ws.send_json(
+                        {"type": "joined", "player_id": player_id, "room_code": room_code}
+                    )
                     await broadcast_room(room)
                 elif msg_type == "join_room":
                     name = message.get("name", "Jogador")
@@ -77,6 +146,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     await ws.send_json(
                         {"type": "joined", "player_id": player_id, "room_code": room_code}
                     )
+                    _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "reconnect":
                     code = (message.get("room_code") or "").upper()
@@ -92,6 +162,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     await ws.send_json(
                         {"type": "joined", "player_id": player_id, "room_code": room_code}
                     )
+                    _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "leave_room":
                     if room_code and player_id:
@@ -102,8 +173,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                             await broadcast_room(room)
                             if room.is_empty():
                                 rooms.remove_room(room_code)
-                        room_code = None
-                        player_id = None
+                            room_code = None
+                            player_id = None
                 elif msg_type == "ready":
                     if not room_code or not player_id:
                         await ws.send_json({"type": "error", "message": "Nao esta em sala"})
@@ -114,6 +185,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                         continue
                     ready = bool(message.get("ready", False))
                     room.game.state.last_message = room.game.set_ready(player_id, ready)
+                    _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "place_base":
                     if not room_code or not player_id:
@@ -125,6 +197,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                         continue
                     pos = tuple(message.get("pos", []))
                     room.game.state.last_message = room.game.place_base(player_id, pos)
+                    _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "buy_base":
                     if not room_code or not player_id:
@@ -136,6 +209,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                         continue
                     pos = tuple(message.get("pos", []))
                     room.game.state.last_message = room.game.buy_base(player_id, pos)
+                    _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "shot":
                     if not room_code or not player_id:
@@ -149,6 +223,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     msg, impacts = room.game.shot(player_id, shot_type)
                     room.game.state.last_message = msg
                     room.game.state.last_impacts = impacts
+                    _apply_ai(room)
                     await broadcast_room(room)
                 else:
                     await ws.send_json({"type": "error", "message": "Mensagem invalida"})

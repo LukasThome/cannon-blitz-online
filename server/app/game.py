@@ -28,6 +28,9 @@ class GameManager:
 
         return player_id
 
+    def add_ai_player(self, name: str = "CPU") -> str:
+        return self.add_player(name)
+
     def remove_player(self, player_id: str) -> None:
         if player_id in self.state.players:
             self.state.players[player_id].connected = False

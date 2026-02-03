@@ -36,6 +36,7 @@ https://your-vercel-app.vercel.app/?ws=wss://your-railway-app.up.railway.app/ws
 ## UX Notes
 - Sounds are opt-in via the `Som: Off/On` toggle.
 - Popups guide the player at key moments: placement start, battle start, victory, and defeat.
+- Single Player: click `Single Player` in the lobby and choose difficulty (Easy/Normal/Hard).
 
 ## Structure
 - `docs/` Original UML and requirements

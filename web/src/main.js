@@ -52,8 +52,10 @@ const ui = {
   nameInput: document.getElementById('name-input'),
   wsLabel: document.getElementById('ws-label'),
   wsInput: document.getElementById('ws-input'),
+  difficulty: document.getElementById('difficulty'),
   codeInput: document.getElementById('code-input'),
   btnCreate: document.getElementById('btn-create'),
+  btnSingle: document.getElementById('btn-single'),
   btnJoin: document.getElementById('btn-join'),
   btnAdvanced: document.getElementById('btn-advanced'),
   modal: document.getElementById('modal'),
@@ -152,6 +154,7 @@ let audioCtx = null;
 let lastPhase = null;
 let lastWinnerId = null;
 let popupsEnabled = true;
+let autoJoinTriggered = false;
 
 function ensureAudio() {
   if (audioCtx) return;
@@ -408,6 +411,12 @@ ui.btnCreate.addEventListener('click', () => {
   send('create_room', { name });
 });
 
+ui.btnSingle.addEventListener('click', () => {
+  const name = ui.nameInput.value.trim() || 'Jogador';
+  const difficulty = ui.difficulty.value;
+  send('create_ai_room', { name, difficulty });
+});
+
 ui.btnJoin.addEventListener('click', () => {
   const name = ui.nameInput.value.trim() || 'Jogador';
   const code = ui.codeInput.value.trim().toUpperCase();
@@ -516,15 +525,21 @@ const urlRoom = params.get('room');
 if (urlRoom) {
   ui.codeInput.value = urlRoom.toUpperCase();
   ui.btnCreate.classList.add('hidden');
+  ui.btnSingle.classList.add('hidden');
   ui.btnJoin.classList.add('hidden');
   const codeLabel = ui.codeInput.closest('label');
   if (codeLabel) {
     codeLabel.classList.add('hidden');
   }
+  const diffLabel = ui.difficulty.closest('label');
+  if (diffLabel) {
+    diffLabel.classList.add('hidden');
+  }
   ui.lobbyMessage.textContent = 'Digite seu nome para entrar.';
-  ui.nameInput.addEventListener('change', () => {
+  ui.nameInput.addEventListener('input', () => {
     const name = ui.nameInput.value.trim();
-    if (!name) return;
+    if (!name || autoJoinTriggered) return;
+    autoJoinTriggered = true;
     if (socket && socket.readyState === WebSocket.OPEN) {
       send('join_room', { name, room_code: ui.codeInput.value.trim().toUpperCase() });
     } else {

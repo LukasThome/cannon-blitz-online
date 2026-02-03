@@ -19,6 +19,8 @@ class Room:
     game: GameManager = field(default_factory=GameManager)
     connections: Dict[str, object] = field(default_factory=dict)
     max_players: int = 2
+    ai_player_id: Optional[str] = None
+    ai_difficulty: str = "normal"
 
     def is_full(self) -> bool:
         return len(self.game.state.players) >= self.max_players

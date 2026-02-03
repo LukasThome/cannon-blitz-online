@@ -190,6 +190,14 @@
       font-family: inherit;
       font-size: 10px;
     }
+    .lobby-card select {
+      background: #1c1412;
+      border: 2px solid #000;
+      color: var(--text);
+      padding: 8px;
+      font-family: inherit;
+      font-size: 10px;
+    }
     .hidden {
       display: none;
     }
@@ -220,7 +228,16 @@
           </label>
           <div class="row">
             <button id="btn-create">Criar Sala</button>
+            <button id="btn-single">Single Player</button>
           </div>
+          <label>
+            Dificuldade
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
           <label>
             Codigo da Sala
             <input id="code-input" placeholder="ABCDE" />
