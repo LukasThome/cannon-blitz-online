@@ -19,8 +19,18 @@ jobs:
         run: |
           python -m venv .venv
           . .venv/bin/activate
-          pip install -r requirements-dev.txt
+          pip install -r server/requirements.txt -r requirements-dev.txt
       - name: Run tests
         run: |
           . .venv/bin/activate
           pytest -q
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install frontend deps
+        working-directory: web
+        run: npm install
+      - name: Run frontend tests
+        working-directory: web
+        run: npm test

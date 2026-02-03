@@ -1,3 +1,5 @@
+import { initLobbySteps } from './lobby.js';
+
 const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
 const wsParam = params.get('ws');
@@ -246,13 +248,7 @@ function stopPirateLoop() {
   }
 }
 
-function showStep(step) {
-  ui.stepName.classList.add('hidden');
-  ui.stepMode.classList.add('hidden');
-  ui.stepJoin.classList.add('hidden');
-  ui.stepSingle.classList.add('hidden');
-  step.classList.remove('hidden');
-}
+const { showStep } = initLobbySteps(ui);
 
 function showModal(title, body) {
   if (!popupsEnabled) return;
@@ -512,24 +508,6 @@ ui.btnAdvanced.addEventListener('click', () => {
   const isHidden = ui.wsLabel.classList.contains('hidden');
   ui.wsLabel.classList.toggle('hidden', !isHidden);
   ui.btnAdvanced.textContent = isHidden ? 'Advanced ✓' : 'Advanced';
-});
-
-ui.btnNextName.addEventListener('click', () => {
-  const name = ui.nameInput.value.trim();
-  if (!name) {
-    ui.lobbyMessage.textContent = 'Digite seu nome para continuar.';
-    return;
-  }
-  ui.lobbyMessage.textContent = '';
-  showStep(ui.stepMode);
-});
-
-ui.btnJoinMode.addEventListener('click', () => {
-  showStep(ui.stepJoin);
-});
-
-ui.btnSingle.addEventListener('click', () => {
-  showStep(ui.stepSingle);
 });
 
 ui.btnSound.addEventListener('click', async () => {

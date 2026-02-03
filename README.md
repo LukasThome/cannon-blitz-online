@@ -39,6 +39,10 @@ https://your-vercel-app.vercel.app/?ws=wss://your-railway-app.up.railway.app/ws
 - Single Player: click `Single Player` in the lobby and choose difficulty (Easy/Normal/Hard).
 - Lobby is step-by-step: name first, then mode (create/join/single), then only the input needed.
 
+## TDD Policy
+- This project follows strict TDD: write tests first (API, component, unit), then implement.
+- New tests are required for every iteration and are enforced in CI.
+
 ## Structure
 - `docs/` Original UML and requirements
 - `server/` FastAPI + WebSockets multiplayer backend
