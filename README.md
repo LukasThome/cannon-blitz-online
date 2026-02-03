@@ -33,6 +33,10 @@ You can pass the backend URL via query string or the lobby input:
 https://your-vercel-app.vercel.app/?ws=wss://your-railway-app.up.railway.app/ws
 ```
 
+## UX Notes
+- Sounds are opt-in via the `Som: Off/On` toggle.
+- Popups guide the player at key moments: placement start, battle start, victory, and defeat.
+
 ## Structure
 - `docs/` Original UML and requirements
 - `server/` FastAPI + WebSockets multiplayer backend

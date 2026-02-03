@@ -33,6 +33,7 @@ const ui = {
   backendStatus: document.getElementById('backend-status'),
   connIndicator: document.getElementById('conn-indicator'),
   btnReconnect: document.getElementById('btn-reconnect'),
+  btnSound: document.getElementById('btn-sound'),
   roomCode: document.getElementById('room-code'),
   inviteLink: document.getElementById('invite-link'),
   btnCopyLink: document.getElementById('btn-copy-link'),
@@ -54,6 +55,10 @@ const ui = {
   btnCreate: document.getElementById('btn-create'),
   btnJoin: document.getElementById('btn-join'),
   btnAdvanced: document.getElementById('btn-advanced'),
+  modal: document.getElementById('modal'),
+  modalTitle: document.getElementById('modal-title'),
+  modalBody: document.getElementById('modal-body'),
+  modalClose: document.getElementById('modal-close'),
 };
 
 class BoardView {
@@ -137,6 +142,54 @@ let impactTimer = null;
 let lastShooterId = null;
 let backendOnline = false;
 let healthFailures = 0;
+let audioEnabled = false;
+let audioCtx = null;
+let lastPhase = null;
+let lastWinnerId = null;
+
+function ensureAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playTone({ freq = 440, duration = 0.12, type = 'square', gain = 0.04 } = {}) {
+  if (!audioEnabled) return;
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  g.gain.value = gain;
+  osc.connect(g).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playStart() {
+  playTone({ freq: 660, duration: 0.08 });
+  setTimeout(() => playTone({ freq: 880, duration: 0.08 }), 120);
+}
+
+function playWin() {
+  playTone({ freq: 784, duration: 0.1 });
+  setTimeout(() => playTone({ freq: 988, duration: 0.1 }), 120);
+  setTimeout(() => playTone({ freq: 1174, duration: 0.12 }), 240);
+}
+
+function playLose() {
+  playTone({ freq: 330, duration: 0.12 });
+  setTimeout(() => playTone({ freq: 262, duration: 0.14 }), 140);
+}
+
+function showModal(title, body) {
+  ui.modalTitle.textContent = title;
+  ui.modalBody.textContent = body;
+  ui.modal.classList.remove('hidden');
+}
+
+function hideModal() {
+  ui.modal.classList.add('hidden');
+}
 
 function setWsUrl(nextUrl) {
   currentWsUrl = nextUrl;
@@ -288,6 +341,30 @@ function renderState() {
 
   enemyBoard.render({ bases: enemyBases, impacts: impactsOnEnemy, showBases: enemy ? 'enemy' : null });
   myBoard.render({ bases: myBases, impacts: impactsOnMe, showBases: 'me' });
+
+  if (lastPhase !== state.phase) {
+    if (state.phase === 'placement') {
+      showModal('Coloque suas bases', 'Escolha 5 posicoes no seu campo.');
+      playStart();
+    }
+    if (state.phase === 'battle') {
+      showModal('Partida iniciada', 'Boa sorte! Um tiro ou compra por turno.');
+      playStart();
+    }
+  }
+
+  if (state.phase === 'ended' && lastWinnerId !== state.winner_id) {
+    if (state.winner_id === playerId) {
+      showModal('Vitoria!', 'Voce destruiu todas as bases do inimigo.');
+      playWin();
+    } else {
+      showModal('Derrota', 'Suas bases foram destruídas.');
+      playLose();
+    }
+  }
+
+  lastPhase = state.phase;
+  lastWinnerId = state.winner_id;
 }
 
 function send(type, payload) {
@@ -329,6 +406,17 @@ ui.btnAdvanced.addEventListener('click', () => {
   ui.wsLabel.classList.toggle('hidden', !isHidden);
   ui.btnAdvanced.textContent = isHidden ? 'Advanced ✓' : 'Advanced';
 });
+
+ui.btnSound.addEventListener('click', async () => {
+  audioEnabled = !audioEnabled;
+  if (audioEnabled) {
+    ensureAudio();
+    await audioCtx.resume();
+  }
+  ui.btnSound.textContent = audioEnabled ? 'Som: On' : 'Som: Off';
+});
+
+ui.modalClose.addEventListener('click', hideModal);
 
 ui.btnNormal.addEventListener('click', () => send('shot', { shot_type: 'normal' }));
 ui.btnPrecise.addEventListener('click', () => send('shot', { shot_type: 'precise' }));
