@@ -2,6 +2,37 @@
 
 Retro pixel-art rebuild of Cannon Blitz for browser multiplayer.
 
+## CI
+- GitHub Actions runs the test suite on every push and pull request.
+
+## Deploy
+### Vercel (Frontend)
+- Import the GitHub repo.
+- Set **Root Directory** to `web/`.
+- Framework: **Other**
+- Build Command: empty
+- Output Directory: `.`
+
+### Railway (Backend)
+- Create a Railway project from this repo.
+- Set service root to `server/`.
+- Start command:
+  ```bash
+  uvicorn app.main:app --host 0.0.0.0 --port $PORT
+  ```
+
+### One-click deploy
+- Vercel:
+  [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/LukasThome/cannon-blitz-online&root-directory=web)
+- Railway:
+  [Deploy on Railway](https://railway.app/new/template?template=https://github.com/LukasThome/cannon-blitz-online&rootDirectory=server)
+
+### WebSocket URL
+You can pass the backend URL via query string or the lobby input:
+```text
+https://your-vercel-app.vercel.app/?ws=wss://your-railway-app.up.railway.app/ws
+```
+
 ## Structure
 - `docs/` Original UML and requirements
 - `server/` FastAPI + WebSockets multiplayer backend
