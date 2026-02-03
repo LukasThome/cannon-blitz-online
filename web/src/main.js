@@ -180,6 +180,7 @@ let enemyImpacts = [];
 let myImpactTimer = null;
 let enemyImpactTimer = null;
 let bgInterval = null;
+let idToken = null;
 
 function ensureAudio() {
   if (audioCtx) return;
@@ -291,6 +292,13 @@ async function setupAuth() {
     const config = window.__FIREBASE_CONFIG__ || {};
     const auth = await initFirebaseAuth(config);
     initAuthUI(authUi, auth);
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        idToken = await user.getIdToken();
+      } else {
+        idToken = null;
+      }
+    });
   } catch (err) {
     authUi.message.textContent = 'Configure o Firebase para continuar.';
   }
@@ -500,7 +508,11 @@ function renderState() {
 
 function send(type, payload) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  socket.send(JSON.stringify({ type, ...payload }));
+  const message = { type, ...payload };
+  if (idToken) {
+    message.idToken = idToken;
+  }
+  socket.send(JSON.stringify(message));
 }
 
 ui.btnCreate.addEventListener('click', () => {

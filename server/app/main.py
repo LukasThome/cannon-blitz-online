@@ -9,6 +9,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from .rooms import RoomManager, Room
+from .auth import verify_id_token
 
 app = FastAPI()
 app.add_middleware(
@@ -104,6 +105,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
 
             async with lock:
                 if msg_type == "create_room":
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     name = message.get("name", "Jogador")
                     room = rooms.create_room()
                     player_id = room.game.add_player(name)
@@ -115,6 +118,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "create_ai_room":
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     name = message.get("name", "Jogador")
                     difficulty = message.get("difficulty", "normal")
                     room = rooms.create_room()
@@ -131,6 +136,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     )
                     await broadcast_room(room)
                 elif msg_type == "join_room":
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     name = message.get("name", "Jogador")
                     code = (message.get("room_code") or "").upper()
                     room = rooms.get_room(code)
@@ -149,6 +156,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     _apply_ai(room)
                     await broadcast_room(room)
                 elif msg_type == "reconnect":
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     code = (message.get("room_code") or "").upper()
                     reconnect_id = message.get("player_id")
                     room = rooms.get_room(code)
@@ -179,6 +188,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     if not room_code or not player_id:
                         await ws.send_json({"type": "error", "message": "Nao esta em sala"})
                         continue
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     room = rooms.get_room(room_code)
                     if not room:
                         await ws.send_json({"type": "error", "message": "Sala inexistente"})
@@ -191,6 +202,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     if not room_code or not player_id:
                         await ws.send_json({"type": "error", "message": "Nao esta em sala"})
                         continue
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     room = rooms.get_room(room_code)
                     if not room:
                         await ws.send_json({"type": "error", "message": "Sala inexistente"})
@@ -203,6 +216,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     if not room_code or not player_id:
                         await ws.send_json({"type": "error", "message": "Nao esta em sala"})
                         continue
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     room = rooms.get_room(room_code)
                     if not room:
                         await ws.send_json({"type": "error", "message": "Sala inexistente"})
@@ -215,6 +230,8 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                     if not room_code or not player_id:
                         await ws.send_json({"type": "error", "message": "Nao esta em sala"})
                         continue
+                    token = message.get("idToken")
+                    verify_id_token(token)
                     room = rooms.get_room(room_code)
                     if not room:
                         await ws.send_json({"type": "error", "message": "Sala inexistente"})

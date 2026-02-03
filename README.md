@@ -55,6 +55,16 @@ npm run generate:config
 ```
 This writes `web/config.json` (gitignored). The app loads it at runtime.
 
+### Admin SDK (Backend)
+Set the service account path in the backend environment:
+```
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
+```
+Optionally disable auth checks in dev/tests:
+```
+AUTH_DISABLED=1
+```
+
 ### Vercel Env Setup
 Set these environment variables in Vercel (Project Settings → Environment Variables), then redeploy:
 - `FIREBASE_API_KEY`
