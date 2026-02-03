@@ -8,10 +8,12 @@ export async function initFirebaseAuth(config) {
 
   const app = appModule.initializeApp(config);
   const auth = authModule.getAuth(app);
+  const provider = new authModule.GoogleAuthProvider();
 
   return {
     login: (email, password) => authModule.signInWithEmailAndPassword(auth, email, password),
     register: (email, password) => authModule.createUserWithEmailAndPassword(auth, email, password),
+    googleLogin: () => authModule.signInWithPopup(auth, provider),
     logout: () => authModule.signOut(auth),
     onAuthStateChanged: (cb) => authModule.onAuthStateChanged(auth, cb),
   };

@@ -17,6 +17,7 @@ function setupDom() {
       </div>
       <button id="auth-login"></button>
       <button id="auth-register"></button>
+      <button id="auth-google"></button>
     </div>
   `;
 
@@ -32,20 +33,21 @@ function setupDom() {
     btnSubmit: document.getElementById('auth-submit'),
     btnLogin: document.getElementById('auth-login'),
     btnRegister: document.getElementById('auth-register'),
+    btnGoogle: document.getElementById('auth-google'),
   };
 }
 
 describe('Auth UI flow', () => {
   it('starts on mode step', () => {
     const ui = setupDom();
-    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn() });
+    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin: vi.fn() });
     expect(ui.stepEmail.classList.contains('hidden')).toBe(true);
     expect(ui.stepPassword.classList.contains('hidden')).toBe(true);
   });
 
   it('requires email before continuing', () => {
     const ui = setupDom();
-    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn() });
+    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin: vi.fn() });
     fireEvent.click(ui.btnLogin);
     fireEvent.click(ui.btnNextEmail);
     expect(ui.message.textContent).toContain('email');
@@ -53,7 +55,7 @@ describe('Auth UI flow', () => {
 
   it('moves to password step after email', () => {
     const ui = setupDom();
-    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn() });
+    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin: vi.fn() });
     fireEvent.click(ui.btnRegister);
     ui.email.value = 'user@example.com';
     fireEvent.click(ui.btnNextEmail);
@@ -63,7 +65,7 @@ describe('Auth UI flow', () => {
   it('calls login with email/password', () => {
     const login = vi.fn();
     const ui = setupDom();
-    initAuthUI(ui, { login, register: vi.fn(), onAuthStateChanged: vi.fn() });
+    initAuthUI(ui, { login, register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin: vi.fn() });
     fireEvent.click(ui.btnLogin);
     ui.email.value = 'user@example.com';
     fireEvent.click(ui.btnNextEmail);
@@ -76,9 +78,17 @@ describe('Auth UI flow', () => {
     const ui = setupDom();
     let cb;
     const onAuthStateChanged = (handler) => { cb = handler; };
-    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged });
+    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged, googleLogin: vi.fn() });
     expect(ui.overlay.classList.contains('hidden')).toBe(false);
     cb({ uid: 'abc' });
     expect(ui.overlay.classList.contains('hidden')).toBe(true);
+  });
+
+  it('calls google login when button clicked', () => {
+    const googleLogin = vi.fn();
+    const ui = setupDom();
+    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin });
+    fireEvent.click(ui.btnGoogle);
+    expect(googleLogin).toHaveBeenCalled();
   });
 });

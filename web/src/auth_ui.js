@@ -46,6 +46,14 @@ export function initAuthUI(ui, auth) {
     }
   });
 
+  if (ui.btnGoogle) {
+    ui.btnGoogle.addEventListener('click', async () => {
+      if (auth.googleLogin) {
+        await auth.googleLogin();
+      }
+    });
+  }
+
   if (auth.onAuthStateChanged) {
     auth.onAuthStateChanged((user) => {
       if (user) {
