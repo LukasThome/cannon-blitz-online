@@ -2,6 +2,7 @@ import { initLobbySteps } from './lobby.js';
 import { initAuthUI } from './auth_ui.js';
 import { initFirebaseAuth } from './auth.js';
 import { wireAuthBadge } from './auth_badge.js';
+import { checkAuthStatus } from './auth_status.js';
 
 const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
@@ -37,6 +38,7 @@ const ui = {
   statusText: document.getElementById('status-text'),
   backendStatus: document.getElementById('backend-status'),
   authUser: document.getElementById('auth-user'),
+  authStatus: document.getElementById('auth-status'),
   btnLogout: document.getElementById('btn-logout'),
   lobbyUser: document.getElementById('lobby-user'),
   userAvatar: document.getElementById('user-avatar'),
@@ -301,8 +303,11 @@ async function setupAuth() {
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         idToken = await user.getIdToken();
+        const status = await checkAuthStatus(idToken);
+        ui.authStatus.textContent = status.ok ? 'Auth: ok' : 'Auth: invalid';
       } else {
         idToken = null;
+        ui.authStatus.textContent = 'Auth: --';
       }
     });
   } catch (err) {

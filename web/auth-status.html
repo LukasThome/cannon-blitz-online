@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cannon Blitz - Auth Status</title>
+</head>
+<body>
+  <h1>Auth Status</h1>
+  <div id="status">Checking...</div>
+  <script type="module">
+    import { initFirebaseAuth } from './src/auth.js';
+    import { checkAuthStatus } from './src/auth_status.js';
+
+    const statusEl = document.getElementById('status');
+    const config = window.__FIREBASE_CONFIG__ || (await fetch('/config.json').then(r => r.json()));
+    const auth = await initFirebaseAuth(config);
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        statusEl.textContent = 'Not logged in';
+        return;
+      }
+      const token = await user.getIdToken();
+      const status = await checkAuthStatus(token);
+      statusEl.textContent = status.ok ? `Auth OK (uid: ${status.uid})` : `Auth FAIL (${status.reason})`;
+    });
+  </script>
+</body>
+</html>
