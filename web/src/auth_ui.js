@@ -7,8 +7,11 @@ export function initAuthUI(ui, auth) {
     step.classList.remove('hidden');
   };
 
-  const setMessage = (text) => {
+  const setMessage = (text, kind = 'info') => {
     ui.message.textContent = text || '';
+    ui.message.classList.remove('is-error', 'is-success');
+    if (kind === 'error') ui.message.classList.add('is-error');
+    if (kind === 'success') ui.message.classList.add('is-success');
   };
 
   ui.btnLogin.addEventListener('click', () => {
@@ -24,7 +27,7 @@ export function initAuthUI(ui, auth) {
   ui.btnNextEmail.addEventListener('click', () => {
     const email = ui.email.value.trim();
     if (!email) {
-      setMessage('Digite seu email para continuar.');
+      setMessage('Digite seu email para continuar.', 'error');
       return;
     }
     setMessage('');
@@ -35,21 +38,32 @@ export function initAuthUI(ui, auth) {
     const email = ui.email.value.trim();
     const password = ui.password.value.trim();
     if (!email || !password) {
-      setMessage('Digite email e senha.');
+      setMessage('Digite email e senha.', 'error');
       return;
     }
     setMessage('');
-    if (mode === 'login') {
-      await auth.login(email, password);
-    } else if (mode === 'register') {
-      await auth.register(email, password);
+    try {
+      if (mode === 'login') {
+        await auth.login(email, password);
+        setMessage('Login realizado com sucesso.', 'success');
+      } else if (mode === 'register') {
+        await auth.register(email, password);
+        setMessage('Conta criada com sucesso.', 'success');
+      }
+    } catch (err) {
+      setMessage('Erro ao autenticar. Verifique seus dados.', 'error');
     }
   });
 
   if (ui.btnGoogle) {
     ui.btnGoogle.addEventListener('click', async () => {
-      if (auth.googleLogin) {
-        await auth.googleLogin();
+      try {
+        if (auth.googleLogin) {
+          await auth.googleLogin();
+          setMessage('Login Google realizado.', 'success');
+        }
+      } catch (err) {
+        setMessage('Erro ao entrar com Google.', 'error');
       }
     });
   }

@@ -5,7 +5,7 @@ import { initAuthUI } from './auth_ui.js';
 function setupDom() {
   document.body.innerHTML = `
     <div id="auth-overlay" class="">
-      <div id="auth-message"></div>
+      <div id="auth-message" class="message"></div>
       <div id="auth-step-mode"></div>
       <div id="auth-step-email" class="hidden">
         <input id="auth-email" />
@@ -62,8 +62,8 @@ describe('Auth UI flow', () => {
     expect(ui.stepPassword.classList.contains('hidden')).toBe(false);
   });
 
-  it('calls login with email/password', () => {
-    const login = vi.fn();
+  it('calls login with email/password', async () => {
+    const login = vi.fn().mockResolvedValue({});
     const ui = setupDom();
     initAuthUI(ui, { login, register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin: vi.fn() });
     fireEvent.click(ui.btnLogin);
@@ -71,7 +71,22 @@ describe('Auth UI flow', () => {
     fireEvent.click(ui.btnNextEmail);
     ui.password.value = 'secret123';
     fireEvent.click(ui.btnSubmit);
+    await new Promise((r) => setTimeout(r, 0));
     expect(login).toHaveBeenCalledWith('user@example.com', 'secret123');
+    expect(ui.message.textContent.toLowerCase()).toContain('sucesso');
+  });
+
+  it('shows error on failed login', async () => {
+    const login = vi.fn().mockRejectedValue(new Error('Invalid'));
+    const ui = setupDom();
+    initAuthUI(ui, { login, register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin: vi.fn() });
+    fireEvent.click(ui.btnLogin);
+    ui.email.value = 'user@example.com';
+    fireEvent.click(ui.btnNextEmail);
+    ui.password.value = 'bad';
+    fireEvent.click(ui.btnSubmit);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(ui.message.textContent.toLowerCase()).toContain('erro');
   });
 
   it('hides overlay when user is authenticated', () => {
@@ -84,11 +99,12 @@ describe('Auth UI flow', () => {
     expect(ui.overlay.classList.contains('hidden')).toBe(true);
   });
 
-  it('calls google login when button clicked', () => {
-    const googleLogin = vi.fn();
+  it('calls google login when button clicked', async () => {
+    const googleLogin = vi.fn().mockResolvedValue({});
     const ui = setupDom();
     initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged: vi.fn(), googleLogin });
     fireEvent.click(ui.btnGoogle);
+    await Promise.resolve();
     expect(googleLogin).toHaveBeenCalled();
   });
 });
