@@ -204,6 +204,8 @@ let myImpacts = [];
 let enemyImpacts = [];
 let myImpactTimer = null;
 let enemyImpactTimer = null;
+let myImpactSeq = 0;
+let enemyImpactSeq = 0;
 let bgInterval = null;
 let idToken = null;
 let currentUser = null;
@@ -484,17 +486,21 @@ function connect() {
         if (lastShooterId === playerId) {
           myImpacts = state.last_impacts;
           if (myImpactTimer) clearTimeout(myImpactTimer);
+          const seq = (myImpactSeq += 1);
           myImpactTimer = setTimeout(() => {
+            if (seq !== myImpactSeq) return;
             myImpacts = [];
             renderState();
-          }, 1000);
+          }, 1400);
         } else {
           enemyImpacts = state.last_impacts;
           if (enemyImpactTimer) clearTimeout(enemyImpactTimer);
+          const seq = (enemyImpactSeq += 1);
           enemyImpactTimer = setTimeout(() => {
+            if (seq !== enemyImpactSeq) return;
             enemyImpacts = [];
             renderState();
-          }, 1000);
+          }, 1400);
         }
       }
       renderState();
