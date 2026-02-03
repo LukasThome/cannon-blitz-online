@@ -158,6 +158,14 @@
       gap: 10px;
       font-size: 10px;
     }
+    .modal-card label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-card input[type="checkbox"] {
+      accent-color: var(--accent);
+    }
     .lobby-card {
       width: 320px;
       padding: 16px;
@@ -232,6 +240,7 @@
       <div class="row">
         <button id="btn-reconnect" disabled>Reconectar</button>
         <button id="btn-sound">Som: Off</button>
+        <button id="btn-settings">Settings</button>
       </div>
       <div class="pill" id="room-code">Sala: --</div>
       <div class="pill" id="invite-link">Invite: --</div>
@@ -266,6 +275,23 @@
       <div id="modal-body" class="message"></div>
       <div class="row">
         <button id="modal-close">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settings" class="modal hidden">
+    <div class="modal-card">
+      <div class="title">Settings</div>
+      <label>
+        <input type="checkbox" id="toggle-sounds" />
+        Sounds
+      </label>
+      <label>
+        <input type="checkbox" id="toggle-popups" checked />
+        Popups
+      </label>
+      <div class="row">
+        <button id="settings-close">Close</button>
       </div>
     </div>
   </div>

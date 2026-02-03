@@ -34,6 +34,7 @@ const ui = {
   connIndicator: document.getElementById('conn-indicator'),
   btnReconnect: document.getElementById('btn-reconnect'),
   btnSound: document.getElementById('btn-sound'),
+  btnSettings: document.getElementById('btn-settings'),
   roomCode: document.getElementById('room-code'),
   inviteLink: document.getElementById('invite-link'),
   btnCopyLink: document.getElementById('btn-copy-link'),
@@ -59,6 +60,10 @@ const ui = {
   modalTitle: document.getElementById('modal-title'),
   modalBody: document.getElementById('modal-body'),
   modalClose: document.getElementById('modal-close'),
+  settings: document.getElementById('settings'),
+  settingsClose: document.getElementById('settings-close'),
+  toggleSounds: document.getElementById('toggle-sounds'),
+  togglePopups: document.getElementById('toggle-popups'),
 };
 
 class BoardView {
@@ -146,6 +151,7 @@ let audioEnabled = false;
 let audioCtx = null;
 let lastPhase = null;
 let lastWinnerId = null;
+let popupsEnabled = true;
 
 function ensureAudio() {
   if (audioCtx) return;
@@ -181,7 +187,16 @@ function playLose() {
   setTimeout(() => playTone({ freq: 262, duration: 0.14 }), 140);
 }
 
+function playShot() {
+  playTone({ freq: 520, duration: 0.06, type: 'square', gain: 0.05 });
+}
+
+function playHit() {
+  playTone({ freq: 920, duration: 0.07, type: 'triangle', gain: 0.06 });
+}
+
 function showModal(title, body) {
+  if (!popupsEnabled) return;
   ui.modalTitle.textContent = title;
   ui.modalBody.textContent = body;
   ui.modal.classList.remove('hidden');
@@ -363,6 +378,15 @@ function renderState() {
     }
   }
 
+  if (clientImpacts.length && lastShooterId !== null) {
+    const enemyHit = enemy && impactsOnEnemy.some((pos) => enemyBases.some((b) => b[0] === pos[0] && b[1] === pos[1]));
+    const meHit = impactsOnMe.some((pos) => myBases.some((b) => b[0] === pos[0] && b[1] === pos[1]));
+    playShot();
+    if (enemyHit || meHit) {
+      playHit();
+    }
+  }
+
   lastPhase = state.phase;
   lastWinnerId = state.winner_id;
 }
@@ -414,9 +438,31 @@ ui.btnSound.addEventListener('click', async () => {
     await audioCtx.resume();
   }
   ui.btnSound.textContent = audioEnabled ? 'Som: On' : 'Som: Off';
+  ui.toggleSounds.checked = audioEnabled;
 });
 
 ui.modalClose.addEventListener('click', hideModal);
+
+ui.btnSettings.addEventListener('click', () => {
+  ui.settings.classList.remove('hidden');
+});
+
+ui.settingsClose.addEventListener('click', () => {
+  ui.settings.classList.add('hidden');
+});
+
+ui.toggleSounds.addEventListener('change', async (evt) => {
+  audioEnabled = evt.target.checked;
+  if (audioEnabled) {
+    ensureAudio();
+    await audioCtx.resume();
+  }
+  ui.btnSound.textContent = audioEnabled ? 'Som: On' : 'Som: Off';
+});
+
+ui.togglePopups.addEventListener('change', (evt) => {
+  popupsEnabled = evt.target.checked;
+});
 
 ui.btnNormal.addEventListener('click', () => send('shot', { shot_type: 'normal' }));
 ui.btnPrecise.addEventListener('click', () => send('shot', { shot_type: 'precise' }));
