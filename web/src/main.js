@@ -1,4 +1,4 @@
-const defaultWsUrl = 'wss://cannon-blitz-online.onrender.com/ws';
+const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
 const wsParam = params.get('ws');
 const storedWs = localStorage.getItem('cannon_ws');
