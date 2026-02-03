@@ -30,4 +30,14 @@ describe('Auth badge', () => {
     await ui.btnLogout.click();
     expect(logout).toHaveBeenCalled();
   });
+
+  it('resets label when logged out', () => {
+    const ui = setupDom();
+    const onAuthStateChanged = (cb) => cb(null);
+    wireAuthBadge(ui, { onAuthStateChanged, logout: vi.fn() });
+    expect(ui.authUser.textContent).toContain('--');
+    expect(ui.lobbyUser.textContent).toContain('--');
+    expect(ui.userAvatar.textContent).toBe('?');
+    expect(ui.btnLogout.disabled).toBe(true);
+  });
 });
