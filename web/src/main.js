@@ -1,4 +1,4 @@
-const defaultWsUrl = `ws://${location.hostname}:8000/ws`;
+const defaultWsUrl = 'wss://cannon-blitz-online.onrender.com/ws';
 const params = new URLSearchParams(location.search);
 const wsParam = params.get('ws');
 const storedWs = localStorage.getItem('cannon_ws');
