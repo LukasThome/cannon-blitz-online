@@ -1,6 +1,7 @@
 import { initLobbySteps } from './lobby.js';
 import { initAuthUI } from './auth_ui.js';
 import { initFirebaseAuth } from './auth.js';
+import { wireAuthBadge } from './auth_badge.js';
 
 const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
@@ -36,6 +37,7 @@ const ui = {
   statusText: document.getElementById('status-text'),
   backendStatus: document.getElementById('backend-status'),
   authUser: document.getElementById('auth-user'),
+  btnLogout: document.getElementById('btn-logout'),
   connIndicator: document.getElementById('conn-indicator'),
   btnReconnect: document.getElementById('btn-reconnect'),
   btnSound: document.getElementById('btn-sound'),
@@ -293,13 +295,12 @@ async function setupAuth() {
     const config = window.__FIREBASE_CONFIG__ || {};
     const auth = await initFirebaseAuth(config);
     initAuthUI(authUi, auth);
+    wireAuthBadge({ authUser: ui.authUser, btnLogout: ui.btnLogout }, auth);
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         idToken = await user.getIdToken();
-        ui.authUser.textContent = `User: ${user.email || user.uid}`;
       } else {
         idToken = null;
-        ui.authUser.textContent = 'User: --';
       }
     });
   } catch (err) {
