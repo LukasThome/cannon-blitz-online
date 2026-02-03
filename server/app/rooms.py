@@ -5,6 +5,8 @@ import string
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
+import asyncio
+
 from .game import GameManager
 
 
@@ -21,6 +23,8 @@ class Room:
     max_players: int = 2
     ai_player_id: Optional[str] = None
     ai_difficulty: str = "normal"
+    ai_scheduled: bool = False
+    ai_task: Optional[asyncio.Task] = None
 
     def is_full(self) -> bool:
         return len(self.game.state.players) >= self.max_players
