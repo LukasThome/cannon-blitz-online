@@ -1,0 +1,7 @@
+-o efeito do tiro so deve aparecer no campo do inimigo quando é meu turno. Assim parece que eu estou levando o tiro quando na verdade estou atirando.
+
+- feature de criar um link para a outra pessoa clicar e jogar comigo
+
+ Add lobby player list + ready status UI
+ Add reconnect handling
+ Expand tests for UI/state transitions
