@@ -44,4 +44,12 @@ describe('Main menu', () => {
     fireEvent.click(ui.playCreate);
     expect(onPlayMode).toHaveBeenCalledWith('create');
   });
+
+  it('shows coming soon on quick match', () => {
+    const ui = setupDom();
+    initMenu(ui, { onPlayMode: vi.fn() });
+    fireEvent.click(ui.menuPlayBtn);
+    fireEvent.click(ui.playQuick);
+    expect(ui.menuMessage.textContent.toLowerCase()).toContain('coming');
+  });
 });

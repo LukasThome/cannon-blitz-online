@@ -11,7 +11,9 @@ export function initMenu(ui, actions) {
   ui.menuPlayBtn.addEventListener('click', showPlay);
   ui.menuBack.addEventListener('click', hidePlay);
 
-  ui.playQuick.addEventListener('click', () => actions.onPlayMode('create'));
+  ui.playQuick.addEventListener('click', () => {
+    ui.menuMessage.textContent = 'Coming soon.';
+  });
   ui.playCreate.addEventListener('click', () => actions.onPlayMode('create'));
   ui.playJoin.addEventListener('click', () => actions.onPlayMode('join'));
   ui.playAi.addEventListener('click', () => actions.onPlayMode('single'));
