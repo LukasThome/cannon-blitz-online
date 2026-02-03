@@ -44,15 +44,16 @@ https://your-vercel-app.vercel.app/?ws=wss://your-railway-app.up.railway.app/ws
 - New tests are required for every iteration and are enforced in CI.
 
 ## Firebase Auth
-Set your Firebase config in `web/index.html`:
-```js
-window.__FIREBASE_CONFIG__ = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  appId: "..."
-};
+Do not hardcode keys in HTML. Use `web/config.json` generated from `.env`.
+
+Steps:
+1. Copy `web/.env.example` to `web/.env` and fill values.
+2. Generate config:
+```bash
+cd web
+npm run generate:config
 ```
+This writes `web/config.json` (gitignored). The app loads it at runtime.
 
 ## Structure
 - `docs/` Original UML and requirements

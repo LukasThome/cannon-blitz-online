@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate:config": "node scripts/generate_config.js"
   },
   "devDependencies": {
     "@testing-library/dom": "9.3.4",

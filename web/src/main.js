@@ -278,6 +278,16 @@ async function setupAuth() {
   };
 
   try {
+    if (!window.__FIREBASE_CONFIG__ || !window.__FIREBASE_CONFIG__.apiKey) {
+      try {
+        const res = await fetch('/config.json');
+        if (res.ok) {
+          window.__FIREBASE_CONFIG__ = await res.json();
+        }
+      } catch (err) {
+        // ignore fetch error; handled below
+      }
+    }
     const config = window.__FIREBASE_CONFIG__ || {};
     const auth = await initFirebaseAuth(config);
     initAuthUI(authUi, auth);
