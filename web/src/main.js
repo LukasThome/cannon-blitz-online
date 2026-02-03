@@ -35,6 +35,7 @@ const ui = {
   status: document.getElementById('status'),
   statusText: document.getElementById('status-text'),
   backendStatus: document.getElementById('backend-status'),
+  authUser: document.getElementById('auth-user'),
   connIndicator: document.getElementById('conn-indicator'),
   btnReconnect: document.getElementById('btn-reconnect'),
   btnSound: document.getElementById('btn-sound'),
@@ -295,8 +296,10 @@ async function setupAuth() {
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         idToken = await user.getIdToken();
+        ui.authUser.textContent = `User: ${user.email || user.uid}`;
       } else {
         idToken = null;
+        ui.authUser.textContent = 'User: --';
       }
     });
   } catch (err) {

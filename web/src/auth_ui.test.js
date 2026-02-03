@@ -71,4 +71,14 @@ describe('Auth UI flow', () => {
     fireEvent.click(ui.btnSubmit);
     expect(login).toHaveBeenCalledWith('user@example.com', 'secret123');
   });
+
+  it('hides overlay when user is authenticated', () => {
+    const ui = setupDom();
+    let cb;
+    const onAuthStateChanged = (handler) => { cb = handler; };
+    initAuthUI(ui, { login: vi.fn(), register: vi.fn(), onAuthStateChanged });
+    expect(ui.overlay.classList.contains('hidden')).toBe(false);
+    cb({ uid: 'abc' });
+    expect(ui.overlay.classList.contains('hidden')).toBe(true);
+  });
 });
