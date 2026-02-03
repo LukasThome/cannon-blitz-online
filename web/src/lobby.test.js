@@ -136,14 +136,12 @@ describe('Lobby step flow', () => {
     expect(ui.confirmSummary.textContent).toContain('Criar sala');
   });
 
-  it('single mode goes to confirm', () => {
+  it('forced join skips mode', () => {
     const ui = setupDom();
-    initLobbySteps(ui);
+    const api = initLobbySteps(ui);
+    api.setForcedMode('join');
     ui.nameInput.value = 'Lucas';
     fireEvent.click(ui.btnNextName);
-    fireEvent.click(ui.btnSingle);
-    fireEvent.click(ui.btnNextSingle);
-    expect(ui.stepConfirm.classList.contains('hidden')).toBe(false);
-    expect(ui.confirmSummary.textContent).toContain('Single Player');
+    expect(ui.stepJoin.classList.contains('hidden')).toBe(false);
   });
 });

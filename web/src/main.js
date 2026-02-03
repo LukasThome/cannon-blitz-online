@@ -3,6 +3,7 @@ import { initAuthUI } from './auth_ui.js';
 import { initFirebaseAuth } from './auth.js';
 import { wireAuthBadge } from './auth_badge.js';
 import { checkAuthStatus } from './auth_status.js';
+import { initMenu } from './menu.js';
 
 const defaultWsUrl = 'wss://honest-kanya-thobe-digital-fa68f3e8.koyeb.app/ws';
 const params = new URLSearchParams(location.search);
@@ -60,6 +61,20 @@ const ui = {
   btnReady: document.getElementById('btn-ready'),
   lobby: document.getElementById('lobby-overlay'),
   lobbyMessage: document.getElementById('lobby-message'),
+  mainMenu: document.getElementById('main-menu'),
+  menuPlay: document.getElementById('menu-play'),
+  menuPlayBtn: document.getElementById('menu-play-btn'),
+  menuBack: document.getElementById('menu-back'),
+  menuMessage: document.getElementById('menu-message'),
+  playQuick: document.getElementById('play-quick'),
+  playCreate: document.getElementById('play-create'),
+  playJoin: document.getElementById('play-join'),
+  playAi: document.getElementById('play-ai'),
+  menuMultiplayer: document.getElementById('menu-multiplayer'),
+  menuTutorials: document.getElementById('menu-tutorials'),
+  menuSettings: document.getElementById('menu-settings'),
+  menuCredits: document.getElementById('menu-credits'),
+  menuExit: document.getElementById('menu-exit'),
   nameInput: document.getElementById('name-input'),
   btnNextName: document.getElementById('btn-next-name'),
   wsLabel: document.getElementById('ws-label'),
@@ -277,7 +292,32 @@ function stopPirateLoop() {
   }
 }
 
-const { showStep } = initLobbySteps(ui);
+const lobbySteps = initLobbySteps(ui);
+const { showStep } = lobbySteps;
+
+initMenu(ui, {
+  onPlayMode(mode) {
+    ui.mainMenu.classList.add('hidden');
+    lobbySteps.setForcedMode(mode);
+    showStep(ui.stepName);
+  },
+});
+
+ui.menuMultiplayer.addEventListener('click', () => {
+  ui.menuMessage.textContent = 'Lobbies e convites em breve.';
+});
+ui.menuTutorials.addEventListener('click', () => {
+  ui.menuMessage.textContent = 'Tutorial e desafios em breve.';
+});
+ui.menuSettings.addEventListener('click', () => {
+  ui.menuMessage.textContent = 'Configurações avançadas em breve.';
+});
+ui.menuCredits.addEventListener('click', () => {
+  ui.menuMessage.textContent = 'Cannon Blitz - 2026.';
+});
+ui.menuExit.addEventListener('click', () => {
+  ui.menuMessage.textContent = 'Use Logout no painel lateral.';
+});
 
 async function setupAuth() {
   const authUi = {
@@ -679,6 +719,8 @@ const urlRoom = params.get('room');
 if (urlRoom) {
   ui.codeInput.value = urlRoom.toUpperCase();
   ui.btnNextName.classList.add('hidden');
+  ui.mainMenu.classList.add('hidden');
+  lobbySteps.setForcedMode('join');
   const codeLabel = ui.codeInput.closest('label');
   if (codeLabel) {
     codeLabel.classList.add('hidden');

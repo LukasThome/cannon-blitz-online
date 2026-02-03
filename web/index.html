@@ -199,6 +199,9 @@
       gap: 10px;
       font-size: 10px;
     }
+    .menu-card {
+      width: 360px;
+    }
     .lobby-card label {
       display: flex;
       flex-direction: column;
@@ -220,7 +223,7 @@
       font-family: inherit;
       font-size: 10px;
     }
-    #step-name, #step-mode, #step-join, #step-single {
+    #step-name, #step-mode, #step-join, #step-single, #step-confirm {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -278,8 +281,38 @@
         </div>
       </div>
       <div id="lobby-overlay">
+        <div id="main-menu" class="lobby-card menu-card">
+          <div class="title">Main Menu</div>
+          <div class="row">
+            <button id="menu-play-btn">Play</button>
+            <button id="menu-multiplayer">Multiplayer</button>
+          </div>
+          <div class="row">
+            <button id="menu-tutorials">Campaign</button>
+            <button id="menu-settings">Settings</button>
+          </div>
+          <div class="row">
+            <button id="menu-credits">Credits</button>
+            <button id="menu-exit">Logout</button>
+          </div>
+          <div id="menu-message" class="message"></div>
+          <div id="menu-play" class="hidden">
+            <div class="row">
+              <button id="play-quick">Quick Match</button>
+              <button id="play-create">Create Room</button>
+            </div>
+            <div class="row">
+              <button id="play-join">Join Room</button>
+              <button id="play-ai">vs AI</button>
+            </div>
+            <div class="row">
+              <button id="menu-back">Back</button>
+            </div>
+          </div>
+        </div>
+
         <div class="lobby-card">
-          <div class="title">Multiplayer Lobby</div>
+          <div class="title">Play Setup</div>
           <div class="pill" id="lobby-user">Jogador: --</div>
           <div id="step-name">
             <label>

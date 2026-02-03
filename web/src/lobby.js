@@ -1,5 +1,6 @@
 export function initLobbySteps(ui) {
   let mode = null;
+  let forcedMode = null;
 
   const showStep = (step) => {
     ui.stepName.classList.add('hidden');
@@ -43,6 +44,22 @@ export function initLobbySteps(ui) {
       return;
     }
     setMessage('');
+    if (forcedMode === 'create') {
+      mode = 'create';
+      updateConfirm();
+      showStep(ui.stepConfirm);
+      return;
+    }
+    if (forcedMode === 'join') {
+      mode = 'join';
+      showStep(ui.stepJoin);
+      return;
+    }
+    if (forcedMode === 'single') {
+      mode = 'single';
+      showStep(ui.stepSingle);
+      return;
+    }
     showStep(ui.stepMode);
   });
 
@@ -95,5 +112,10 @@ export function initLobbySteps(ui) {
 
   showStep(ui.stepName);
 
-  return { showStep };
+  return {
+    showStep,
+    setForcedMode(nextMode) {
+      forcedMode = nextMode;
+    },
+  };
 }
